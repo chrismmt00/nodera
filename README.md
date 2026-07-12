@@ -24,9 +24,10 @@ Phase 0 foundation is in progress. The repository has been reshaped into the mon
 
 ```bash
 npm install
+docker compose up -d
 npm run dev
 npm run build
 npm run lint
 ```
 
-The full dev-stack commands from `AGENTS.md` will become available as later Phase 0 and Phase 1 tasks add Postgres, Prisma, seed data, and smoke tests.
+`docker compose up -d` starts Postgres at the `DATABASE_URL` published in `.env.example`. Prisma, seed data, smoke tests, and the full dev stack arrive in later tasks.
