@@ -32,6 +32,8 @@ function newSecret(prefix) {
   return { plaintext, hash: sha256(plaintext) };
 }
 
-const { MODELS, ensureMenuModels } = require("./menu.js");
+// Menu definitions live in @nodera/shared (the provider agent needs them
+// without a database); re-exported here for seed and test convenience.
+const { MODELS, ensureMenuModels } = require("@nodera/shared");
 
 module.exports = { prisma, newId, sha256, newSecret, MODELS, ensureMenuModels };
