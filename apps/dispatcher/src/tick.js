@@ -134,11 +134,27 @@ async function assignQueuedJobs(prisma, log) {
   return assigned;
 }
 
+// 2.4: any running run past its deadline expires — even when the provider is
+// still heartbeating (DECISIONS 010 closes the hung-worker hole).
+async function expireOverdueRuns(prisma, log) {
+  const overdue = await prisma.run.findMany({
+    where: { status: "running", deadlineAt: { lt: new Date() } },
+  });
+  for (const run of overdue) {
+    await finalizeRunAndRequeue(prisma, log, run, "expired", {
+      code: "deadline_exceeded",
+      message: "This took too long and was stopped — try again.",
+    });
+  }
+  return overdue.length;
+}
+
 async function runTick(prisma, log) {
+  const expired = await expireOverdueRuns(prisma, log);
   const offlined = await failOfflineProviderRuns(prisma, log);
   const assigned = await assignQueuedJobs(prisma, log);
   const queued = await prisma.job.count({ where: { status: "queued" } });
-  return { queued, assigned, expired: 0, offlined };
+  return { queued, assigned, expired, offlined };
 }
 
 module.exports = { runTick };

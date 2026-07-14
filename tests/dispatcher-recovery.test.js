@@ -66,6 +66,49 @@ test.after(async () => {
   await prisma.$disconnect();
 });
 
+test("2.4: never-finishing run expires at deadline despite heartbeats", async (t) => {
+  const hung = await makeProvider("recovery-hangs");
+  const aliveTimer = setInterval(() => keepAlive(hung.id).catch(() => {}), 300);
+  t.after(() => clearInterval(aliveTimer));
+
+  const job = await submitJob();
+  const run = await waitFor(() =>
+    prisma.run.findFirst({ where: { jobId: job.job_id, providerId: hung.id } })
+  );
+  assert.ok(run, "job was never assigned");
+
+  // The provider "claims" the run but never finishes: running with a
+  // deadline already in the past, while heartbeats keep flowing.
+  await prisma.run.update({
+    where: { id: run.id },
+    data: {
+      status: "running",
+      startedAt: new Date(Date.now() - 5000),
+      deadlineAt: new Date(Date.now() - 1000),
+    },
+  });
+  await prisma.job.update({ where: { id: job.job_id }, data: { status: "running" } });
+
+  // The tick expires the run and may requeue + reassign within the same
+  // tick, so assert the durable outcomes: run expired, job got attempt 2.
+  const expired = await waitFor(async () => {
+    const r = await prisma.run.findUnique({ where: { id: run.id } });
+    return r.status === "expired" ? r : null;
+  });
+  assert.ok(expired, "run never expired despite passed deadline");
+  assert.equal(expired.error.code, "deadline_exceeded");
+
+  const jobAfter = await waitFor(async () => {
+    const j = await prisma.job.findUnique({ where: { id: job.job_id } });
+    return j.attempts === 2 && ["queued", "assigned", "running"].includes(j.status) ? j : null;
+  });
+  assert.ok(jobAfter, "job was never requeued/reassigned after expiry");
+
+  // Stop the queue from reassigning forever: park the provider offline.
+  clearInterval(aliveTimer);
+  await prisma.job.update({ where: { id: job.job_id }, data: { status: "canceled" } });
+});
+
 test("2.3: dead provider's run fails, job requeues to the survivor with attempts+1", async (t) => {
   const dead = await makeProvider("recovery-dies");
   const job = await submitJob();
