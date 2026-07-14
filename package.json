@@ -8,12 +8,13 @@
     "workers/*"
   ],
   "scripts": {
-    "dev": "npm run dev -w @nodera/web",
-    "dev:web": "npm run dev -w @nodera/web",
+    "dev": "node scripts/dev-web.js dev",
+    "dev:web": "node scripts/dev-web.js dev",
     "build": "npm run build -w @nodera/web",
     "start": "npm run start -w @nodera/web",
     "lint": "npm run lint -w @nodera/web",
     "seed": "node --env-file-if-exists=.env scripts/seed.js",
+    "test": "node --env-file-if-exists=.env --test \"tests/**/*.test.js\"",
     "postinstall": "prisma generate"
   }
 }
