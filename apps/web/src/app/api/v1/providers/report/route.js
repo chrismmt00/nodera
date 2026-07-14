@@ -1,4 +1,4 @@
-import { prisma, newId } from "@nodera/db";
+import { prisma, newId, enqueueJobWebhook } from "@nodera/db";
 import { getStorage, pendingKey, permanentKey } from "@nodera/storage";
 import { withRoute, ApiError } from "@/lib/api/errors.js";
 import { requireProvider } from "@/lib/api/auth.js";
@@ -209,10 +209,11 @@ export const POST = withRoute(async (request) => {
     }
 
     if (body.status === "succeeded") {
-      await tx.job.updateMany({
+      const finalized = await tx.job.updateMany({
         where: { id: run.jobId, status: { in: ["assigned", "running"] } },
         data: { status: "succeeded", finalizedAt: new Date() },
       });
+      if (finalized.count === 1) await enqueueJobWebhook(tx, run.job);
     } else if (run.job.attempts < run.job.maxAttempts) {
       // Attempts remain: hand the job back to the queue for a fresh run.
       await tx.job.updateMany({
@@ -220,10 +221,11 @@ export const POST = withRoute(async (request) => {
         data: { status: "queued" },
       });
     } else {
-      await tx.job.updateMany({
+      const finalized = await tx.job.updateMany({
         where: { id: run.jobId, status: { in: ["assigned", "running"] } },
         data: { status: "failed", finalizedAt: new Date() },
       });
+      if (finalized.count === 1) await enqueueJobWebhook(tx, run.job);
     }
     return "finalized";
   });

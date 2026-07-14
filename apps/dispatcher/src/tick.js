@@ -1,6 +1,7 @@
 // One dispatcher tick. Phases: assignment (2.2), offline-provider requeue
-// (2.3), deadline expiry (2.4) — all bounded by the attempts cap (2.5).
-const { newId } = require("@nodera/db");
+// (2.3), deadline expiry (2.4) — all bounded by the attempts cap (2.5) —
+// and webhook enqueue on finalization (5.1).
+const { newId, enqueueJobWebhook } = require("@nodera/db");
 
 function offlineAfterMs() {
   return parseInt(process.env.PROVIDER_OFFLINE_AFTER_MS || "120000", 10);
@@ -26,10 +27,11 @@ async function finalizeRunAndRequeue(prisma, log, run, runStatus, error) {
       });
       log.info("job requeued", { jobId: job.id, runId: run.id, reason: error.code });
     } else {
-      await tx.job.updateMany({
+      const finalized = await tx.job.updateMany({
         where: { id: job.id, status: { in: ["assigned", "running"] } },
         data: { status: "failed", finalizedAt: new Date() },
       });
+      if (finalized.count === 1) await enqueueJobWebhook(tx, job);
       log.info("job failed (attempts exhausted)", { jobId: job.id, runId: run.id });
     }
   });
