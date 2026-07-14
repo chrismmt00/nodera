@@ -32,7 +32,7 @@ One task = one AI session = one commit. Do them in order. Check the box only whe
 - [x] **2.3 Offline-provider requeue.** No heartbeat past PROVIDER_OFFLINE_AFTER_MS → fail its unfinished runs, requeue jobs. ✓ when: test simulating dead provider passes.
 - [x] **2.4 Deadline expiry.** Runs past deadline_at → expired, job requeued, regardless of heartbeats. ✓ when: never-finishing-run test passes.
 - [x] **2.5 Attempts cap.** attempts ≥ max_attempts → job failed with plain-language error. ✓ when: third failure finalizes the job; test written.
-- [ ] **2.6 Multi-provider test script.** Two fake providers, concurrency 1, 20 jobs. ✓ when: max 2 concurrent, both providers used, no double-claims, queue drains — scripted assertion, not eyeballing.
+- [x] **2.6 Multi-provider test script.** Two fake providers, concurrency 1, 20 jobs. ✓ when: max 2 concurrent, both providers used, no double-claims, queue drains — scripted assertion, not eyeballing.
 
 **GATE 2:** 2.6 passes; kill-a-provider-mid-job requeues to the other with attempts incremented.
 
