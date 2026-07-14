@@ -17,7 +17,7 @@ One task = one AI session = one commit. Do them in order. Check the box only whe
 - [x] **1.1 Error + auth plumbing.** Shared error helper producing the api.md shape; `x-api-key` and `x-provider-token` middlewares (hashed lookup). ✓ when: bad/missing keys return `401 unauthorized` in the exact contract shape.
 - [x] **1.2 POST /v1/jobs + Idempotency-Key.** Validation against the model's params, job creation. ✓ when: contract examples work verbatim; replay returns original job (200); same key + different body → 409; test written.
 - [x] **1.3 GET /v1/jobs/:id and GET /v1/jobs.** Detail with run/usage/output/artifacts fields; paginated list. ✓ when: responses match api.md field-for-field; cross-workspace access is 404; test written.
-- [ ] **1.4 GET /v1/models.** Menu from DB including params schema. ✓ when: response drives 1.2's validation (single source).
+- [x] **1.4 GET /v1/models.** Menu from DB including params schema. ✓ when: response drives 1.2's validation (single source).
 - [ ] **1.5 Provider register + heartbeat.** Enroll secret, token issuance (hash stored), heartbeat updates. ✓ when: register returns token once; wrong secret → 403.
 - [ ] **1.6 Poll with atomic claim.** ✓ when: two concurrent polls for one assigned run — exactly one receives it (concurrency test written and passing).
 - [ ] **1.7 Report endpoint.** Finalize run+job, record usage, idempotent no-op on duplicate, 409 on conflict. ✓ when: all three report tests pass.

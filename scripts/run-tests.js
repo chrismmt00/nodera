@@ -59,8 +59,10 @@ async function main() {
     }
   }
 
+  // Serial: suites share one database, and some fixtures (e.g. menu
+  // activation) are global state.
   const files = listTestFiles(path.join(ROOT, "tests"));
-  const result = spawnSync(process.execPath, ["--test", ...files], {
+  const result = spawnSync(process.execPath, ["--test", "--test-concurrency=1", ...files], {
     cwd: ROOT,
     env: process.env,
     stdio: "inherit",
