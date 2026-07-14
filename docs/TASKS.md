@@ -27,7 +27,7 @@ One task = one AI session = one commit. Do them in order. Check the box only whe
 
 ## Phase 2 — Dispatcher, retries, deadlines
 
-- [ ] **2.1 Dispatcher skeleton.** apps/dispatcher loop on DISPATCH_INTERVAL_MS with clean shutdown. ✓ when: runs alongside dev stack, logs each tick.
+- [x] **2.1 Dispatcher skeleton.** apps/dispatcher loop on DISPATCH_INTERVAL_MS with clean shutdown. ✓ when: runs alongside dev stack, logs each tick.
 - [ ] **2.2 Matching + assignment transaction.** Oldest queued job × online provider with model ready + free slot; assign in one transaction (job→assigned, attempts+1, run created). ✓ when: smoke now passes with the real dispatcher doing assignment.
 - [ ] **2.3 Offline-provider requeue.** No heartbeat past PROVIDER_OFFLINE_AFTER_MS → fail its unfinished runs, requeue jobs. ✓ when: test simulating dead provider passes.
 - [ ] **2.4 Deadline expiry.** Runs past deadline_at → expired, job requeued, regardless of heartbeats. ✓ when: never-finishing-run test passes.
