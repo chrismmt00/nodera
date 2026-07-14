@@ -39,6 +39,8 @@ npm run dev        # web app (control plane)
 npm run build
 npm run lint
 npm run seed       # idempotent — safe to rerun
+npm run smoke      # full job lifecycle check (boots the app if needed)
+npm test           # integration tests (boots the app if needed)
 ```
 
-Smoke tests and the full dev stack (`npm run dev:all`) arrive in later tasks.
+The full dev stack (`npm run dev:all`) arrives with the dispatcher.

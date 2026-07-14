@@ -21,7 +21,7 @@ One task = one AI session = one commit. Do them in order. Check the box only whe
 - [x] **1.5 Provider register + heartbeat.** Enroll secret, token issuance (hash stored), heartbeat updates. ✓ when: register returns token once; wrong secret → 403.
 - [x] **1.6 Poll with atomic claim.** ✓ when: two concurrent polls for one assigned run — exactly one receives it (concurrency test written and passing).
 - [x] **1.7 Report endpoint.** Finalize run+job, record usage, idempotent no-op on duplicate, 409 on conflict. ✓ when: all three report tests pass.
-- [ ] **1.8 Fake provider + smoke.js.** Script registers a fake provider, polls, reports success; `npm run smoke` drives job → succeeded and asserts usage recorded. ✓ when: smoke passes from clean seed. (Note: Phase 1 has no dispatcher yet — smoke may assign directly in DB; replaced in 2.x.)
+- [x] **1.8 Fake provider + smoke.js.** Script registers a fake provider, polls, reports success; `npm run smoke` drives job → succeeded and asserts usage recorded. ✓ when: smoke passes from clean seed. (Note: Phase 1 has no dispatcher yet — smoke may assign directly in DB; replaced in 2.x.)
 
 **GATE 1:** smoke green; idempotency, atomic-claim, and duplicate-report tests green.
 
