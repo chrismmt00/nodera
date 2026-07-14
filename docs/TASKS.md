@@ -42,7 +42,7 @@ One task = one AI session = one commit. Do them in order. Check the box only whe
 - [x] **3.2 LLM worker (real).** workers/llm-worker: Ollama-backed, reads /job/input.json, writes result + usage. ✓ when: container run manually against a prompt produces real text and valid meta.json.
 - [x] **3.3 Agent Docker runner.** Provider agent creates job dir, runs allowlisted image with only /job mounted, non-root, no privileged, resource caps per blueprint §11. ✓ when: security flags verified in the docker inspect output, asserted in a test.
 - [x] **3.4 Kill timer + cleanup.** Agent kills container at model max_runtime, reports failed(timeout), cleans job dirs. ✓ when: forced-hang worker is killed and job retries (ties to 2.4).
-- [ ] **3.5 Metering wired through.** usage from meta.json → report → run row → GET /v1/jobs/:id. ✓ when: smoke asserts real token counts, not zeros.
+- [x] **3.5 Metering wired through.** usage from meta.json → report → run row → GET /v1/jobs/:id. ✓ when: smoke asserts real token counts, not zeros.
 
 **GATE 3:** real prompt → real text end-to-end; hang test green.
 

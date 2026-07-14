@@ -27,6 +27,7 @@ function boot(name, args, cwd) {
 boot("web", [require.resolve("next/dist/bin/next"), "dev", "-p", process.env.PORT || "3000"],
   path.join(ROOT, "apps", "web"));
 boot("dispatcher", [path.join(ROOT, "apps", "dispatcher", "src", "index.js")], ROOT);
+boot("agent", [path.join(ROOT, "apps", "provider-agent", "src", "index.js")], ROOT);
 
 process.on("SIGINT", () => {
   for (const child of children) child.kill();

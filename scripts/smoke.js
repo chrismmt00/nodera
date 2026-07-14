@@ -1,16 +1,39 @@
 // Full job lifecycle check (docs/BLUEPRINT.md §15): submit a job through the
-// public API, let the REAL dispatcher assign it, drive a fake provider
-// through poll → report, and assert queued → assigned → running → succeeded
-// with usage recorded.
+// public API, let the REAL dispatcher assign it to the REAL provider agent,
+// which runs the REAL Docker worker against the REAL model server — and
+// assert real text and real token counts come back (Gate 3).
+const os = require("node:os");
+const fs = require("node:fs");
 const path = require("node:path");
 const { loadEnv } = require("@nodera/shared");
 loadEnv(path.join(__dirname, ".."));
 process.env.STORAGE_ROOT = path.resolve(__dirname, "..", process.env.STORAGE_ROOT || "storage");
 
-const { prisma, newId, newSecret, ensureMenuModels } = require("@nodera/db");
+const { prisma, newId, newSecret, ensureMenuModels, MODELS } = require("@nodera/db");
 const { ensureWeb } = require("./lib/ensure-web.js");
 const { ensureDispatcher } = require("./lib/ensure-dispatcher.js");
-const { FakeProvider } = require("./lib/fake-provider.js");
+const { ProviderAgent } = require("../apps/provider-agent/src/agent.js");
+
+// The real pipeline needs the local model server that workers call.
+async function checkOllama() {
+  const url = (process.env.OLLAMA_URL || "http://host.docker.internal:11434").replace(
+    "host.docker.internal",
+    "localhost"
+  );
+  const runtimeRef = MODELS.find((m) => m.slug === "llama-3.1-8b").runtimeRef;
+  try {
+    const res = await fetch(`${url}/api/tags`, { signal: AbortSignal.timeout(3000) });
+    const tags = await res.json();
+    if (!tags.models?.some((m) => m.name === runtimeRef || m.model === runtimeRef)) {
+      throw new Error(`model ${runtimeRef} is not pulled — run: ollama pull ${runtimeRef}`);
+    }
+  } catch (err) {
+    throw new Error(
+      `Ollama is required for smoke (real end-to-end pipeline): ${err.message}. ` +
+        `Install/start Ollama and pull ${runtimeRef} (see docs/RUNBOOK.md).`
+    );
+  }
+}
 
 function fail(msg) {
   console.error(`SMOKE FAIL: ${msg}`);
@@ -23,6 +46,7 @@ function assert(cond, msg) {
 }
 
 async function main() {
+  await checkOllama();
   const { base, stop: stopWeb } = await ensureWeb();
   const { stop: stopDispatcher } = await ensureDispatcher();
   const api = `${base}/api/v1`;
@@ -40,11 +64,18 @@ async function main() {
       data: { id: newId("key"), workspaceId: workspace.id, keyHash: hash, label: "smoke" },
     });
 
-    // 1. Fake provider registers, heartbeats, and starts polling.
-    provider = new FakeProvider({ api, name: "smoke-fake-provider", simulateMs: 400 });
+    // 1. The REAL provider agent: registers, heartbeats, polls, runs Docker.
+    const scratch = fs.mkdtempSync(path.join(os.tmpdir(), "nodera-smoke-"));
+    provider = new ProviderAgent({
+      name: "smoke-agent",
+      jobsDir: path.join(scratch, "jobs"),
+      stateFile: path.join(scratch, "agent-state.json"),
+      pollMs: 300,
+      modelsReady: ["llama-3.1-8b"],
+    });
     await provider.start();
     cleanup.providerId = provider.providerId;
-    console.log(`provider online: ${provider.providerId}`);
+    console.log(`real agent online: ${provider.providerId}`);
 
     // 2. Submit a job.
     const createRes = await fetch(`${api}/jobs`, {
@@ -62,7 +93,7 @@ async function main() {
 
     // 3. Watch the lifecycle through the customer API until final.
     const seen = new Set(["queued"]);
-    const deadline = Date.now() + 45000;
+    const deadline = Date.now() + 150000;
     let detail = null;
     while (Date.now() < deadline) {
       detail = await (
@@ -80,19 +111,24 @@ async function main() {
     assert(detail.finalized_at, "finalized_at missing");
     assert(detail.attempts === 1, `expected 1 attempt, got ${detail.attempts}`);
     assert(detail.run && detail.run.provider === provider.providerId, "winning run/provider missing");
+    // Real token counts, not zeros (3.5), and real generated text.
     assert(
-      detail.run.usage && detail.run.usage.tokens_out > 0,
-      "usage not recorded (tokens_out is zero or missing)"
+      detail.run.usage && detail.run.usage.tokens_in > 0 && detail.run.usage.tokens_out > 0,
+      "usage not real (tokens are zero or missing)"
     );
-    assert(detail.output && typeof detail.output.text === "string", "output.text missing");
+    assert(
+      detail.output && typeof detail.output.text === "string" && detail.output.text.trim().length > 0,
+      "output.text missing or empty"
+    );
     assert(
       detail.artifacts.some((a) => a.name === "result.json"),
       "result.json artifact missing"
     );
     console.log(
-      `usage recorded: ${detail.run.usage.tokens_in} in / ${detail.run.usage.tokens_out} out`
+      `real usage: ${detail.run.usage.tokens_in} in / ${detail.run.usage.tokens_out} out / ${detail.run.usage.duration_ms}ms`
     );
-    console.log("SMOKE PASS: dispatcher-assigned lifecycle reached succeeded with usage recorded");
+    console.log(`real text: ${detail.output.text.slice(0, 100).replace(/\n/g, " / ")}`);
+    console.log("SMOKE PASS: real prompt → real model → real text, end to end");
   } finally {
     if (provider) await provider.stop();
     // Leave the database the way we found it.
