@@ -3,39 +3,7 @@
 // Idempotent: rerunning never duplicates rows and never prints a new key
 // unless the workspace has no keys at all.
 const crypto = require("node:crypto");
-const { prisma, newId, newSecret } = require("@nodera/db");
-
-const MODELS = [
-  {
-    slug: "llama-3.1-8b",
-    modality: "llm",
-    description: "Fast general text model — emails, summaries, descriptions.",
-    params: {
-      prompt: { type: "string", required: true, max_bytes: 32768 },
-      max_tokens: { type: "integer", default: 512, max: 2048 },
-    },
-    workerImage: "nodera/llm-worker",
-    runtimeRef: "llama3.1:8b",
-    minVramGb: 8,
-    maxRuntimeS: 120,
-    active: true,
-  },
-  {
-    slug: "sdxl-1.0",
-    modality: "image",
-    description: "High-quality image generation from a text prompt.",
-    params: {
-      prompt: { type: "string", required: true, max_bytes: 4096 },
-      width: { type: "integer", default: 1024 },
-      height: { type: "integer", default: 1024 },
-    },
-    workerImage: "nodera/image-worker",
-    runtimeRef: "stabilityai/stable-diffusion-xl-base-1.0",
-    minVramGb: 12,
-    maxRuntimeS: 300,
-    active: true,
-  },
-];
+const { prisma, newId, newSecret, MODELS, ensureMenuModels } = require("@nodera/db");
 
 async function main() {
   let workspace = await prisma.workspace.findFirst({ where: { name: "Dev Workspace" } });
@@ -66,23 +34,8 @@ async function main() {
     console.log("API key already exists (plaintext is only shown at creation)");
   }
 
-  for (const m of MODELS) {
-    await prisma.model.upsert({
-      where: { slug: m.slug },
-      update: {
-        modality: m.modality,
-        description: m.description,
-        params: m.params,
-        workerImage: m.workerImage,
-        runtimeRef: m.runtimeRef,
-        minVramGb: m.minVramGb,
-        maxRuntimeS: m.maxRuntimeS,
-        active: m.active,
-      },
-      create: { ...m },
-    });
-    console.log(`Model ${m.slug} ready`);
-  }
+  await ensureMenuModels(prisma);
+  for (const m of MODELS) console.log(`Model ${m.slug} ready`);
 }
 
 main()

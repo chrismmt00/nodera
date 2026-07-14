@@ -14,7 +14,7 @@
     "start": "npm run start -w @nodera/web",
     "lint": "npm run lint -w @nodera/web",
     "seed": "node --env-file-if-exists=.env scripts/seed.js",
-    "test": "node --env-file-if-exists=.env --test \"tests/**/*.test.js\"",
+    "test": "node scripts/run-tests.js",
     "postinstall": "prisma generate"
   }
 }

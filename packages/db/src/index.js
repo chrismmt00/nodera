@@ -32,4 +32,6 @@ function newSecret(prefix) {
   return { plaintext, hash: sha256(plaintext) };
 }
 
-module.exports = { prisma, newId, sha256, newSecret };
+const { MODELS, ensureMenuModels } = require("./menu.js");
+
+module.exports = { prisma, newId, sha256, newSecret, MODELS, ensureMenuModels };
