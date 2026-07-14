@@ -4,11 +4,11 @@ One task = one AI session = one commit. Do them in order. Check the box only whe
 
 ## Phase 0 — Foundation
 
-- [ ] **0.1 Repo scaffold + remote.** Monorepo layout per blueprint §3/§6, root package.json with workspaces, .gitignore, .env.example, README stub. Git init, remote added, first push. ✓ when: `git push` succeeds and the layout matches the blueprint.
-- [ ] **0.2 Dev Postgres.** docker-compose.yml with Postgres, healthcheck, volume. ✓ when: `docker compose up -d` yields a connectable DB using .env.example values.
+- [x] **0.1 Repo scaffold + remote.** Monorepo layout per blueprint §3/§6, root package.json with workspaces, .gitignore, .env.example, README stub. Git init, remote added, first push. ✓ when: `git push` succeeds and the layout matches the blueprint.
+- [x] **0.2 Dev Postgres.** docker-compose.yml with Postgres, healthcheck, volume. ✓ when: `docker compose up -d` yields a connectable DB using .env.example values.
 - [ ] **0.3 Prisma schema.** All tables from blueprint §5 in packages/db, first migration. ✓ when: `npx prisma migrate dev` runs clean twice (idempotent) and every §5 field exists.
 - [ ] **0.4 Seed script.** `npm run seed`: one workspace, one API key (print the plaintext once), both menu models. ✓ when: rerunning seed doesn't duplicate rows.
-- [ ] **0.5 Docs in repo.** Copy VISION, SCOPE, BLUEPRINT, USER-STORIES, api.md, TASKS, DECISIONS into docs/; AGENTS.md at root; CLAUDE.md containing "Read AGENTS.md". ✓ when: all present, committed, pushed.
+- [x] **0.5 Docs in repo.** Copy VISION, SCOPE, BLUEPRINT, USER-STORIES, api.md, TASKS, DECISIONS into docs/; AGENTS.md at root; CLAUDE.md containing "Read AGENTS.md". ✓ when: all present, committed, pushed. (Moved, not copied — single source per DECISIONS 023.)
 
 **GATE 0:** migrate + seed clean from a fresh clone by following README only.
 
@@ -102,3 +102,20 @@ One task = one AI session = one commit. Do them in order. Check the box only whe
 - [ ] **8.9 Stopwatch.** Non-technical friend: install→registered-and-pulling in under 5 minutes, unassisted. ✓ when: measured.
 
 **GATE 8:** Scope success criteria 3–7 all pass. v1 is done.
+
+## Phase 9 — Production hardening + scale proof
+
+Added per docs/DECISIONS.md 023. Parts that need no real models may run after Phase 5; the gate closes after Phase 8.
+
+- [ ] **9.1 Load harness.** scripts/load/: job-burst generator (configurable count/rate/model mix) and N fake providers (configurable concurrency, simulated runtimes, failure rate), emitting a machine-readable report: throughput, queue-wait p50/p95, assignment latency, POST /v1/jobs latency p50/p95. ✓ when: one command runs a parameterized load scenario.
+- [ ] **9.2 Burst test.** 1,000 jobs in <60s against 10 fake providers. ✓ when: queue drains fully, zero double-claims, zero lost/stuck jobs, POST /v1/jobs p95 < 1s at max queue depth (the api.md promise), asserted by script — numbers recorded in docs/RUNBOOK.md.
+- [ ] **9.3 Concurrency abuse.** 50 simultaneous polls per assigned run → exactly one winner; same Idempotency-Key fired 20× concurrently → exactly one job, all responses consistent; concurrent conflicting reports → one 200, rest 409. ✓ when: all asserted in tests, repeatable.
+- [ ] **9.4 Soak test.** 30 minutes of sustained load. ✓ when: control plane, dispatcher, and agent RSS stay bounded (no monotonic growth), dispatcher tick duration stays flat as the jobs table grows into the tens of thousands, no handle/connection leaks.
+- [ ] **9.5 Chaos drills.** Kill dispatcher mid-assignment and restart → no stuck jobs; kill a provider mid-job under load → requeue to survivors with attempts incremented; restart Postgres mid-load → services reconnect and the queue drains. ✓ when: each drill is a scripted, repeatable test.
+- [ ] **9.6 Rate-limit under load.** One key hammering at 10× its limit while others run normal traffic. ✓ when: hammering key gets 429 + correct Retry-After, other keys' p95 unaffected, queue integrity holds.
+- [ ] **9.7 Webhook backlog.** 500 pending deliveries against a slow/failing receiver. ✓ when: backoff schedule holds under backlog, no delivery starvation, terminal failures marked, job statuses never affected.
+- [ ] **9.8 Artifact stress.** 20 concurrent >5MB streaming downloads with a bounded-memory assertion; parallel upload-url requests respect MAX_ARTIFACTS_PER_RUN and MAX_ARTIFACT_TOTAL_BYTES exactly. ✓ when: asserted by test.
+- [ ] **9.9 Security audit pass.** Scripted checks: no secret/key/token in any log output or test fixture; API keys and provider tokens verifiably stored hashed; SSRF guard blocks 169.254.169.254, localhost, private ranges, and DNS-rebinding to them; every customer route returns 404 for foreign-workspace resources (fuzzed across all endpoints); npm audit reviewed with findings triaged in docs/DECISIONS.md.
+- [ ] **9.10 Ops readiness.** docs/RUNBOOK.md covers: local setup from clean clone, deploy, migrate, rollback, Postgres backup + a performed restore drill, log locations, health checks, "provider stuck / queue stuck / webhook backlog" triage. ✓ when: a fresh clone following only README + RUNBOOK reaches a green smoke + green 9.2.
+
+**GATE 9:** burst, soak, chaos, and security tests all green from a clean clone; every remaining "[~] blocked on human" item has exact instructions in docs/LAUNCH-CHECKLIST.md. This gate plus Gate 8 defines production-ready.

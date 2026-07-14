@@ -6,7 +6,8 @@ services:
       POSTGRES_PASSWORD: nodera
       POSTGRES_DB: nodera
     ports:
-      - "5432:5432"
+      # Host port 5433: dev machines may run a native PostgreSQL on 5432 (docs/DECISIONS.md 022).
+      - "5433:5432"
     volumes:
       - nodera_postgres_data:/var/lib/postgresql/data
     healthcheck:

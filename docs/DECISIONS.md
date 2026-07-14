@@ -43,3 +43,7 @@ Why things are the way they are. Newest at the bottom. Format: number, date, dec
 **020 — 2026-07-10 — Image generation and batch LLM work are the target workloads; interactive chat is not.** The queue→assign→container architecture suits async jobs; streaming/chat latency is a different product and out of scope.
 
 **021 — 2026-07-10 — Doc set is capped at eight.** VISION, SCOPE, BLUEPRINT, USER-STORIES, api.md, TASKS, DECISIONS, AGENTS (+ pointer CLAUDE.md, + RUNBOOK written during Phase 0–1 as commands stabilize). No duplicate-topic docs; duplication drifts and poisons AI context.
+
+**022 — 2026-07-14 — Dev Postgres maps host port 5433.** The primary dev machine runs a native PostgreSQL on 5432; the compose container binds 5433 to avoid the conflict. `.env.example` DATABASE_URL points at 5433. Container-internal port stays 5432.
+
+**023 — 2026-07-14 — Phase 9 (production hardening + scale proof) added to TASKS.md.** v1 gates prove functional correctness but nothing about behavior under load. Phase 9 adds a load harness, burst/soak/chaos/rate-limit/webhook-backlog/artifact-stress tests, a scripted security audit, and RUNBOOK-driven ops readiness. Production-ready = Gate 8 + Gate 9. Owner-authorized deviations recorded here: docs were MOVED (not copied) into docs/ for task 0.5 to keep a single source per 021, and multi-task AI sessions are authorized for this build effort while retaining one-task-one-commit discipline.

@@ -2,7 +2,7 @@
 
 Nodera is a distributed AI compute network. Customers submit async AI jobs through an API or web app; a dispatcher assigns runs to independent provider machines; provider agents execute approved Docker workers; results return as artifacts and signed webhooks.
 
-This repository follows [AGENTS.md](./AGENTS.md). Build tasks are completed one at a time from [TASKS.md](./TASKS.md).
+This repository follows [AGENTS.md](./AGENTS.md). Build tasks are completed one at a time from [docs/TASKS.md](./docs/TASKS.md).
 
 ## Current Status
 
@@ -18,7 +18,7 @@ Phase 0 foundation is in progress. The repository has been reshaped into the mon
 - `packages/storage` - future local/R2 storage abstraction.
 - `workers/llm-worker` - future LLM worker image.
 - `workers/image-worker` - future image worker image.
-- `docs` - project docs will be copied here in Phase 0.5.
+- `docs` - VISION, SCOPE, BLUEPRINT, USER-STORIES, api.md, TASKS, DECISIONS.
 
 ## Commands
 
