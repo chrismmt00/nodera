@@ -104,9 +104,59 @@ test("2.4: never-finishing run expires at deadline despite heartbeats", async (t
   });
   assert.ok(jobAfter, "job was never requeued/reassigned after expiry");
 
-  // Stop the queue from reassigning forever: park the provider offline.
+  // Stop the queue from reassigning forever and keep this provider out of
+  // later tests' matching.
   clearInterval(aliveTimer);
   await prisma.job.update({ where: { id: job.job_id }, data: { status: "canceled" } });
+  await prisma.provider.update({ where: { id: hung.id }, data: { status: "disabled" } });
+});
+
+test("2.5: third failure finalizes the job with a plain-language error", async (t) => {
+  const flaky = await makeProvider("recovery-flaky");
+  const aliveTimer = setInterval(() => keepAlive(flaky.id).catch(() => {}), 300);
+  t.after(() => clearInterval(aliveTimer));
+
+  const job = await submitJob(); // maxAttempts default 3
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const run = await waitFor(() =>
+      prisma.run.findFirst({ where: { jobId: job.job_id, attempt } })
+    );
+    assert.ok(run, `attempt ${attempt} was never assigned`);
+    // Simulate a hung worker every time: claimed, then blows the deadline.
+    await prisma.run.update({
+      where: { id: run.id },
+      data: {
+        status: "running",
+        startedAt: new Date(Date.now() - 5000),
+        deadlineAt: new Date(Date.now() - 1000),
+      },
+    });
+    await prisma.job.updateMany({
+      where: { id: job.job_id, status: "assigned" },
+      data: { status: "running" },
+    });
+  }
+
+  const failed = await waitFor(async () => {
+    const j = await prisma.job.findUnique({ where: { id: job.job_id } });
+    return j.status === "failed" ? j : null;
+  });
+  assert.ok(failed, "job was never finalized after exhausting attempts");
+  assert.equal(failed.attempts, 3);
+  assert.ok(failed.finalizedAt);
+  assert.equal(await prisma.run.count({ where: { jobId: job.job_id } }), 3);
+
+  // The customer sees a sentence, not a stack trace.
+  const detail = await (
+    await fetch(`${API}/jobs/${job.job_id}`, { headers: { "x-api-key": fx.apiKeyPlaintext } })
+  ).json();
+  assert.equal(detail.status, "failed");
+  assert.equal(detail.error.code, "deadline_exceeded");
+  assert.match(detail.error.message, /took too long/);
+
+  clearInterval(aliveTimer);
+  await prisma.provider.update({ where: { id: flaky.id }, data: { status: "disabled" } });
 });
 
 test("2.3: dead provider's run fails, job requeues to the survivor with attempts+1", async (t) => {
