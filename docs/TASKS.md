@@ -38,7 +38,7 @@ One task = one AI session = one commit. Do them in order. Check the box only whe
 
 ## Phase 3 — Docker execution + real LLM
 
-- [ ] **3.1 Worker contract utils.** packages/shared: write input.json, read out/ (logs, meta with usage block, result). ✓ when: unit tests cover happy path and malformed meta.
+- [x] **3.1 Worker contract utils.** packages/shared: write input.json, read out/ (logs, meta with usage block, result). ✓ when: unit tests cover happy path and malformed meta.
 - [ ] **3.2 LLM worker (real).** workers/llm-worker: Ollama-backed, reads /job/input.json, writes result + usage. ✓ when: container run manually against a prompt produces real text and valid meta.json.
 - [ ] **3.3 Agent Docker runner.** Provider agent creates job dir, runs allowlisted image with only /job mounted, non-root, no privileged, resource caps per blueprint §11. ✓ when: security flags verified in the docker inspect output, asserted in a test.
 - [ ] **3.4 Kill timer + cleanup.** Agent kills container at model max_runtime, reports failed(timeout), cleans job dirs. ✓ when: forced-hang worker is killed and job retries (ties to 2.4).
