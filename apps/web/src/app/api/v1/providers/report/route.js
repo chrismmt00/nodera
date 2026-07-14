@@ -1,7 +1,7 @@
 import { prisma, newId } from "@nodera/db";
+import { getStorage, permanentKey } from "@nodera/storage";
 import { withRoute, ApiError } from "@/lib/api/errors.js";
 import { requireProvider } from "@/lib/api/auth.js";
-import { permanentKey, writeLocalArtifact } from "@/lib/api/artifacts-local.js";
 
 const NAME_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 const USAGE_INTS = ["tokens_in", "tokens_out", "images", "duration_ms"];
@@ -142,20 +142,22 @@ export const POST = withRoute(async (request) => {
 
   // Persist artifact bytes before the transaction: a failed transaction only
   // orphans files, never the other way around.
-  const artifactRows = artifacts.map((a) => {
+  const storage = getStorage();
+  const artifactRows = [];
+  for (const a of artifacts) {
     const objectKey = permanentKey(run.jobId, run.id, a.name);
-    writeLocalArtifact(objectKey, a.buffer);
-    return {
+    await storage.putBuffer(objectKey, a.buffer, { contentType: a.mime });
+    artifactRows.push({
       id: newId("art"),
       runId: run.id,
       name: a.name,
       mime: a.mime,
       sizeBytes: a.sizeBytes,
-      backend: "local",
+      backend: storage.backendName,
       objectKey,
       inline: true,
-    };
-  });
+    });
+  }
 
   const outcome = await prisma.$transaction(async (tx) => {
     const claimed = await tx.run.updateMany({

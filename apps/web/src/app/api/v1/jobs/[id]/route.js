@@ -1,7 +1,22 @@
 import { prisma } from "@nodera/db";
+import { getStorage } from "@nodera/storage";
+import { createLogger } from "@nodera/shared";
 import { withRoute, ApiError } from "@/lib/api/errors.js";
 import { requireApiKey } from "@/lib/api/auth.js";
-import { readInlineJson } from "@/lib/api/artifacts-local.js";
+
+const log = createLogger("web");
+
+// Parsed JSON of a small inline artifact, or null — output is a convenience,
+// the artifact download route is the reliable path.
+async function readInlineJson(objectKey, maxBytes) {
+  try {
+    const buffer = await getStorage().getBuffer(objectKey, maxBytes);
+    return buffer ? JSON.parse(buffer.toString("utf8")) : null;
+  } catch (err) {
+    log.warn("inline artifact unreadable", { objectKey, error: err.message });
+    return null;
+  }
+}
 
 const FINAL_RUN_STATUSES = ["succeeded", "failed", "expired"];
 
@@ -36,7 +51,7 @@ export const GET = withRoute(async (request, ctx) => {
   if (job.status === "succeeded" && run) {
     const inlineLimit = parseInt(process.env.INLINE_ARTIFACT_MAX_BYTES || "262144", 10);
     const result = run.artifacts.find((a) => a.name === "result.json" && a.inline);
-    if (result) output = readInlineJson(result.objectKey, inlineLimit);
+    if (result) output = await readInlineJson(result.objectKey, inlineLimit);
   }
 
   let error = null;
