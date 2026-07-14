@@ -30,6 +30,50 @@ function replayResponse(job, body) {
   return Response.json(jobResponse(job), { status: 200 });
 }
 
+// GET /v1/jobs — newest first, cursor pagination (docs/api.md conventions).
+export const GET = withRoute(async (request) => {
+  const apiKey = await requireApiKey(request);
+  const url = new URL(request.url);
+
+  let limit = 20;
+  if (url.searchParams.has("limit")) {
+    limit = Number(url.searchParams.get("limit"));
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+      throw new ApiError("validation_failed", "limit must be an integer between 1 and 100.");
+    }
+  }
+
+  const query = {
+    where: { workspaceId: apiKey.workspaceId },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: limit + 1,
+  };
+  const cursor = url.searchParams.get("cursor");
+  if (cursor) {
+    const anchor = await prisma.job.findFirst({
+      where: { id: cursor, workspaceId: apiKey.workspaceId },
+    });
+    if (!anchor) throw new ApiError("validation_failed", "Invalid cursor.");
+    query.cursor = { id: cursor };
+    query.skip = 1;
+  }
+
+  const rows = await prisma.job.findMany(query);
+  const page = rows.slice(0, limit);
+  const nextCursor = rows.length > limit ? page[page.length - 1].id : null;
+
+  return Response.json({
+    jobs: page.map((job) => ({
+      job_id: job.id,
+      status: job.status,
+      model: job.modelSlug,
+      created_at: job.createdAt.toISOString(),
+      finalized_at: job.finalizedAt ? job.finalizedAt.toISOString() : null,
+    })),
+    next_cursor: nextCursor,
+  });
+});
+
 export const POST = withRoute(async (request) => {
   const apiKey = await requireApiKey(request);
 

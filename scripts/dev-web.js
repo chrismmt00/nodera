@@ -6,6 +6,8 @@ const { spawn } = require("node:child_process");
 const { loadEnv } = require("@nodera/shared");
 
 loadEnv(path.join(__dirname, ".."));
+// The web app runs with cwd apps/web; anchor storage at the repo root.
+process.env.STORAGE_ROOT = path.resolve(__dirname, "..", process.env.STORAGE_ROOT || "storage");
 
 const nextBin = require.resolve("next/dist/bin/next");
 const child = spawn(
