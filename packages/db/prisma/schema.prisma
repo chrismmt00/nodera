@@ -1,0 +1,196 @@
+// Nodera database schema — source of truth: docs/BLUEPRINT.md §5.
+// Prisma is the only database layer (AGENTS.md rule 2).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum JobStatus {
+  queued
+  assigned
+  running
+  succeeded
+  failed
+  canceled
+}
+
+enum RunStatus {
+  assigned
+  running
+  succeeded
+  failed
+  expired
+}
+
+enum ProviderStatus {
+  pending
+  approved
+  disabled
+}
+
+enum Modality {
+  llm
+  image
+}
+
+enum ArtifactBackend {
+  local
+  r2
+}
+
+enum WebhookDeliveryStatus {
+  pending
+  delivering
+  succeeded
+  failed
+}
+
+model Workspace {
+  id            String   @id
+  name          String
+  webhookSecret String   @map("webhook_secret")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  apiKeys ApiKey[]
+  jobs    Job[]
+
+  @@map("workspaces")
+}
+
+model ApiKey {
+  id          String    @id
+  workspaceId String    @map("workspace_id")
+  keyHash     String    @unique @map("key_hash")
+  label       String
+  createdAt   DateTime  @default(now()) @map("created_at")
+  revokedAt   DateTime? @map("revoked_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@index([workspaceId])
+  @@map("api_keys")
+}
+
+model Provider {
+  id              String         @id
+  name            String
+  tokenHash       String         @unique @map("token_hash")
+  status          ProviderStatus @default(approved)
+  trustTier       String         @default("standard") @map("trust_tier")
+  concurrency     Int            @default(1)
+  // { models: [slug], gpu: { model, vram_gb }, models_ready: [slug] }
+  capabilities    Json
+  lastHeartbeatAt DateTime?      @map("last_heartbeat_at")
+  createdAt       DateTime       @default(now()) @map("created_at")
+
+  runs Run[]
+
+  @@index([status, lastHeartbeatAt])
+  @@map("providers")
+}
+
+model Model {
+  slug        String   @id
+  modality    Modality
+  description String
+  // Param schema per docs/api.md GET /v1/models — drives API validation and UI forms.
+  params      Json
+  workerImage String   @map("worker_image")
+  runtimeRef  String   @map("runtime_ref")
+  minVramGb   Int      @map("min_vram_gb")
+  maxRuntimeS Int      @map("max_runtime_s")
+  active      Boolean  @default(true)
+
+  jobs Job[]
+
+  @@map("models")
+}
+
+model Job {
+  id             String    @id
+  workspaceId    String    @map("workspace_id")
+  modelSlug      String    @map("model_slug")
+  tier           String    @default("standard")
+  input          Json
+  status         JobStatus @default(queued)
+  attempts       Int       @default(0)
+  maxAttempts    Int       @default(3) @map("max_attempts")
+  idempotencyKey String?   @map("idempotency_key")
+  webhookUrl     String?   @map("webhook_url")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  finalizedAt    DateTime? @map("finalized_at")
+
+  workspace         Workspace         @relation(fields: [workspaceId], references: [id])
+  model             Model             @relation(fields: [modelSlug], references: [slug])
+  runs              Run[]
+  webhookDeliveries WebhookDelivery[]
+
+  @@unique([workspaceId, idempotencyKey])
+  @@index([workspaceId, createdAt(sort: Desc)])
+  @@index([status, createdAt])
+  @@map("jobs")
+}
+
+model Run {
+  id         String    @id
+  jobId      String    @map("job_id")
+  providerId String    @map("provider_id")
+  attempt    Int
+  status     RunStatus @default(assigned)
+  assignedAt DateTime  @default(now()) @map("assigned_at")
+  startedAt  DateTime? @map("started_at")
+  endedAt    DateTime? @map("ended_at")
+  deadlineAt DateTime? @map("deadline_at")
+  exitCode   Int?      @map("exit_code")
+  // { code, message }
+  error      Json?
+  // { tokens_in, tokens_out, images, duration_ms, model_slug }
+  usage      Json?
+
+  job       Job        @relation(fields: [jobId], references: [id])
+  provider  Provider   @relation(fields: [providerId], references: [id])
+  artifacts Artifact[]
+
+  @@index([jobId])
+  @@index([providerId, status])
+  @@index([status, deadlineAt])
+  @@map("runs")
+}
+
+model Artifact {
+  id        String          @id
+  runId     String          @map("run_id")
+  name      String
+  mime      String
+  sizeBytes Int             @map("size_bytes")
+  backend   ArtifactBackend
+  objectKey String          @map("object_key")
+  inline    Boolean         @default(false)
+
+  run Run @relation(fields: [runId], references: [id])
+
+  @@unique([runId, name])
+  @@map("artifacts")
+}
+
+model WebhookDelivery {
+  id            String                @id
+  jobId         String                @map("job_id")
+  url           String
+  status        WebhookDeliveryStatus @default(pending)
+  attempts      Int                   @default(0)
+  nextAttemptAt DateTime              @default(now()) @map("next_attempt_at")
+  lastError     String?               @map("last_error")
+  createdAt     DateTime              @default(now()) @map("created_at")
+
+  job Job @relation(fields: [jobId], references: [id])
+
+  // Exactly one delivery row per job finalization (docs/TASKS.md 5.1).
+  @@unique([jobId])
+  @@index([status, nextAttemptAt])
+  @@map("webhook_deliveries")
+}
