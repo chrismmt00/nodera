@@ -158,35 +158,80 @@ class ProviderAgent {
     this._pending.add(done);
   }
 
+  // Large artifacts: presigned upload first, then referenced (not inlined)
+  // in the report. Returns the report entry.
+  async _uploadArtifact(run, file, mime) {
+    const res = await fetch(`${this.api}/providers/artifacts/upload-url`, {
+      method: "POST",
+      headers: this._headers(),
+      body: JSON.stringify({
+        run_id: run.run_id,
+        name: file.name,
+        mime,
+        size_bytes: file.sizeBytes,
+      }),
+    });
+    if (res.status !== 200) {
+      throw new Error(`upload-url failed (${res.status}): ${await res.text()}`);
+    }
+    const target = await res.json();
+    const put = await fetch(target.upload_url, {
+      method: target.method,
+      headers: target.headers,
+      body: file.buffer,
+    });
+    if (!put.ok) {
+      throw new Error(`artifact PUT failed (${put.status})`);
+    }
+    return { name: file.name, mime, size_bytes: file.sizeBytes };
+  }
+
   async _report(run, result) {
     const inlineMax = parseInt(process.env.INLINE_ARTIFACT_MAX_BYTES || "262144", 10);
     let body;
     if (result.status === "succeeded") {
       const artifacts = [];
       for (const file of result.files) {
+        const mime = mimeFor(file.name);
         if (file.sizeBytes > inlineMax) {
-          // Large artifacts need presigned uploads — Phase 4.
-          this.log.warn("artifact exceeds inline limit — skipped until Phase 4", {
-            runId: run.run_id,
-            name: file.name,
-            sizeBytes: file.sizeBytes,
-          });
+          try {
+            artifacts.push(await this._uploadArtifact(run, file, mime));
+          } catch (err) {
+            this.log.error("large artifact upload failed", {
+              runId: run.run_id,
+              name: file.name,
+              error: err.message,
+            });
+            body = {
+              run_id: run.run_id,
+              status: "failed",
+              exit_code: 1,
+              error: {
+                code: "artifact_upload_failed",
+                message: "The result file could not be uploaded — the job will be retried.",
+              },
+            };
+            break;
+          }
           continue;
         }
         artifacts.push({
           name: file.name,
-          mime: mimeFor(file.name),
+          mime,
           size_bytes: file.sizeBytes,
           inline_base64: file.buffer.toString("base64"),
         });
       }
-      body = {
-        run_id: run.run_id,
-        status: "succeeded",
-        exit_code: 0,
-        usage: result.usage,
-        artifacts,
-      };
+      if (!body) {
+        // No upload failure prepared a failed report above.
+        body = {
+          run_id: run.run_id,
+          status: "succeeded",
+          exit_code: 0,
+          usage: result.usage,
+          artifacts,
+        };
+      }
     } else {
       body = {
         run_id: run.run_id,

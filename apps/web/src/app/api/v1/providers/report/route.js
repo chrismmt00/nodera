@@ -1,5 +1,5 @@
 import { prisma, newId } from "@nodera/db";
-import { getStorage, permanentKey } from "@nodera/storage";
+import { getStorage, pendingKey, permanentKey } from "@nodera/storage";
 import { withRoute, ApiError } from "@/lib/api/errors.js";
 import { requireProvider } from "@/lib/api/auth.js";
 
@@ -54,11 +54,9 @@ function validateArtifacts(artifacts) {
       throw new ApiError("artifact_limits_exceeded", `Artifacts exceed ${maxTotal} total bytes.`);
     }
     if (a.inline_base64 === undefined) {
-      // Presigned uploads arrive with the storage abstraction (Phase 4).
-      throw new ApiError(
-        "validation_failed",
-        `artifact '${a.name}': only inline artifacts are supported right now.`
-      );
+      // Uploaded via presigned URL — verified against pending/ below.
+      out.push({ name: a.name, mime: a.mime, sizeBytes: a.size_bytes, uploaded: true });
+      continue;
     }
     let buffer;
     try {
@@ -81,6 +79,17 @@ function validateArtifacts(artifacts) {
     out.push({ name: a.name, mime: a.mime, sizeBytes: a.size_bytes, buffer });
   }
   return out;
+}
+
+// HEAD the pending object with short retries — providers report immediately
+// after their PUT completes, so eventual consistency gets 100ms/300ms grace.
+async function verifyUploadedObject(storage, key) {
+  for (const delayMs of [0, 100, 300]) {
+    if (delayMs > 0) await new Promise((r) => setTimeout(r, delayMs));
+    const head = await storage.headObject(key);
+    if (head) return head;
+  }
+  return null;
 }
 
 // POST /v1/providers/report — finalize a run and its job.
@@ -140,13 +149,32 @@ export const POST = withRoute(async (request) => {
     }
   }
 
-  // Persist artifact bytes before the transaction: a failed transaction only
-  // orphans files, never the other way around.
+  // Persist/promote artifact bytes before the transaction: a failed
+  // transaction only orphans files, never the other way around.
   const storage = getStorage();
   const artifactRows = [];
   for (const a of artifacts) {
     const objectKey = permanentKey(run.jobId, run.id, a.name);
-    await storage.putBuffer(objectKey, a.buffer, { contentType: a.mime });
+    if (a.uploaded) {
+      // Verify the provider's presigned upload, then promote pending→permanent.
+      const pending = pendingKey(run.jobId, run.id, a.name);
+      const head = await verifyUploadedObject(storage, pending);
+      if (!head) {
+        throw new ApiError(
+          "artifact_missing",
+          `artifact '${a.name}' was not found in storage — upload it before reporting.`
+        );
+      }
+      if (head.size !== a.sizeBytes) {
+        throw new ApiError(
+          "validation_failed",
+          `artifact '${a.name}': uploaded size ${head.size} does not match size_bytes ${a.sizeBytes}.`
+        );
+      }
+      await storage.copyObject(pending, objectKey);
+    } else {
+      await storage.putBuffer(objectKey, a.buffer, { contentType: a.mime });
+    }
     artifactRows.push({
       id: newId("art"),
       runId: run.id,
@@ -155,7 +183,7 @@ export const POST = withRoute(async (request) => {
       sizeBytes: a.sizeBytes,
       backend: storage.backendName,
       objectKey,
-      inline: true,
+      inline: !a.uploaded,
     });
   }
 
