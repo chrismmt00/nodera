@@ -49,7 +49,7 @@ One task = one AI session = one commit. Do them in order. Check the box only whe
 ## Phase 4 — Artifacts + R2
 
 - [x] **4.1 Storage abstraction + local backend.** putBuffer/headObject/getReadStream/copyObject; inline (≤256KB) artifacts stored via it. ✓ when: local regression test green.
-- [ ] **4.2 R2 backend.** Same interface, env-configured. ✓ when: R2 smoke (put/head/stream/copy) green against a real bucket.
+- [~] **4.2 R2 backend.** Same interface, env-configured. ✓ when: R2 smoke (put/head/stream/copy) green against a real bucket. *(Blocked on human: bucket + credentials — see docs/LAUNCH-CHECKLIST.md §1. Backend + `npm run smoke:r2` implemented and ready.)*
 - [ ] **4.3 Upload-url endpoint.** Ownership check, server-derived pending/ key, TTL, content-type in signature, limits. ✓ when: contract examples work; foreign run → 403; over-limit → contract error.
 - [ ] **4.4 Report verification + promote.** HEAD with 100/300ms retries, size check, pending→permanent copy, artifact rows. ✓ when: missing-object → 400 artifact_missing; size mismatch rejected; tests written.
 - [ ] **4.5 Streaming download route.** ✓ when: >5MB artifact streams (verified via memory/chunk assertion), correct headers, cross-workspace → 404.
