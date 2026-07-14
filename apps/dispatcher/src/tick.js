@@ -6,6 +6,60 @@ function offlineAfterMs() {
   return parseInt(process.env.PROVIDER_OFFLINE_AFTER_MS || "120000", 10);
 }
 
+// Finalizes an active run negatively and hands its job back to the queue,
+// or fails the job when attempts are exhausted (2.5). Guarded updates make
+// this safe against concurrent reports.
+async function finalizeRunAndRequeue(prisma, log, run, runStatus, error) {
+  await prisma.$transaction(async (tx) => {
+    const closed = await tx.run.updateMany({
+      where: { id: run.id, status: { in: ["assigned", "running"] } },
+      data: { status: runStatus, endedAt: new Date(), error },
+    });
+    if (closed.count !== 1) return; // a report beat us to it — nothing to do
+
+    const job = await tx.job.findUnique({ where: { id: run.jobId } });
+    if (!job || !["assigned", "running"].includes(job.status)) return;
+    if (job.attempts < job.maxAttempts) {
+      await tx.job.updateMany({
+        where: { id: job.id, status: { in: ["assigned", "running"] } },
+        data: { status: "queued" },
+      });
+      log.info("job requeued", { jobId: job.id, runId: run.id, reason: error.code });
+    } else {
+      await tx.job.updateMany({
+        where: { id: job.id, status: { in: ["assigned", "running"] } },
+        data: { status: "failed", finalizedAt: new Date() },
+      });
+      log.info("job failed (attempts exhausted)", { jobId: job.id, runId: run.id });
+    }
+  });
+}
+
+// 2.3: a provider with no heartbeat for PROVIDER_OFFLINE_AFTER_MS is offline —
+// fail its unfinished runs and requeue their jobs.
+async function failOfflineProviderRuns(prisma, log) {
+  const cutoff = new Date(Date.now() - offlineAfterMs());
+  const stuckRuns = await prisma.run.findMany({
+    where: {
+      status: { in: ["assigned", "running"] },
+      provider: {
+        OR: [
+          { lastHeartbeatAt: { lt: cutoff } },
+          // Never heartbeated and registered long enough ago to be dead.
+          { lastHeartbeatAt: null, createdAt: { lt: cutoff } },
+        ],
+      },
+    },
+  });
+  for (const run of stuckRuns) {
+    await finalizeRunAndRequeue(prisma, log, run, "failed", {
+      code: "provider_offline",
+      message: "The machine running this job went offline — it will be retried.",
+    });
+  }
+  return stuckRuns.length;
+}
+
 // Oldest queued job × online approved provider with the model ready and a
 // free slot. Each assignment is one transaction: job queued→assigned with
 // attempts+1, run created (blueprint §6).
@@ -81,9 +135,10 @@ async function assignQueuedJobs(prisma, log) {
 }
 
 async function runTick(prisma, log) {
+  const offlined = await failOfflineProviderRuns(prisma, log);
   const assigned = await assignQueuedJobs(prisma, log);
   const queued = await prisma.job.count({ where: { status: "queued" } });
-  return { queued, assigned, expired: 0, requeued: 0 };
+  return { queued, assigned, expired: 0, offlined };
 }
 
 module.exports = { runTick };
