@@ -20,14 +20,25 @@ Phase 0 foundation is in progress. The repository has been reshaped into the mon
 - `workers/image-worker` - future image worker image.
 - `docs` - VISION, SCOPE, BLUEPRINT, USER-STORIES, api.md, TASKS, DECISIONS.
 
+## Getting started (fresh clone)
+
+```bash
+npm install                # install all workspaces
+cp .env.example .env       # then set PROVIDER_ENROLL_SECRET to any random string
+docker compose up -d       # Postgres on localhost:5433
+npx prisma migrate dev     # apply schema (also generates the Prisma client)
+npm run seed               # dev workspace + API key (printed once) + menu models
+```
+
+On Windows use `copy .env.example .env`.
+
 ## Commands
 
 ```bash
-npm install
-docker compose up -d
-npm run dev
+npm run dev        # web app (control plane)
 npm run build
 npm run lint
+npm run seed       # idempotent — safe to rerun
 ```
 
-`docker compose up -d` starts Postgres at the `DATABASE_URL` published in `.env.example`. Prisma, seed data, smoke tests, and the full dev stack arrive in later tasks.
+Smoke tests and the full dev stack (`npm run dev:all`) arrive in later tasks.

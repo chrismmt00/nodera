@@ -7,7 +7,7 @@ One task = one AI session = one commit. Do them in order. Check the box only whe
 - [x] **0.1 Repo scaffold + remote.** Monorepo layout per blueprint §3/§6, root package.json with workspaces, .gitignore, .env.example, README stub. Git init, remote added, first push. ✓ when: `git push` succeeds and the layout matches the blueprint.
 - [x] **0.2 Dev Postgres.** docker-compose.yml with Postgres, healthcheck, volume. ✓ when: `docker compose up -d` yields a connectable DB using .env.example values.
 - [x] **0.3 Prisma schema.** All tables from blueprint §5 in packages/db, first migration. ✓ when: `npx prisma migrate dev` runs clean twice (idempotent) and every §5 field exists.
-- [ ] **0.4 Seed script.** `npm run seed`: one workspace, one API key (print the plaintext once), both menu models. ✓ when: rerunning seed doesn't duplicate rows.
+- [x] **0.4 Seed script.** `npm run seed`: one workspace, one API key (print the plaintext once), both menu models. ✓ when: rerunning seed doesn't duplicate rows.
 - [x] **0.5 Docs in repo.** Copy VISION, SCOPE, BLUEPRINT, USER-STORIES, api.md, TASKS, DECISIONS into docs/; AGENTS.md at root; CLAUDE.md containing "Read AGENTS.md". ✓ when: all present, committed, pushed. (Moved, not copied — single source per DECISIONS 023.)
 
 **GATE 0:** migrate + seed clean from a fresh clone by following README only.
