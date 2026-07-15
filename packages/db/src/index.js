@@ -2,6 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const { PrismaPg } = require("@prisma/adapter-pg");
 const { newId, sha256, newSecret } = require("./ids-internal.js");
 const { enqueueJobWebhook } = require("./webhooks.js");
+const { provisionUserWorkspace } = require("./provision.js");
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is not set — copy .env.example to .env (see README).");
@@ -20,4 +21,13 @@ const prisma =
 // without a database); re-exported here for seed and test convenience.
 const { MODELS, ensureMenuModels } = require("@nodera/shared");
 
-module.exports = { prisma, newId, sha256, newSecret, MODELS, ensureMenuModels, enqueueJobWebhook };
+module.exports = {
+  prisma,
+  newId,
+  sha256,
+  newSecret,
+  MODELS,
+  ensureMenuModels,
+  enqueueJobWebhook,
+  provisionUserWorkspace,
+};

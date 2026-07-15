@@ -1,6 +1,6 @@
 import { prisma, newId } from "@nodera/db";
 import { withRoute, ApiError } from "@/lib/api/errors.js";
-import { requireApiKey } from "@/lib/api/auth.js";
+import { requireWorkspace } from "@/lib/api/auth.js";
 import { validateJobInput, validateWebhookUrl, canonicalJson } from "@/lib/api/validate.js";
 
 const BODY_FIELDS = new Set(["model", "input", "webhook_url"]);
@@ -32,7 +32,7 @@ function replayResponse(job, body) {
 
 // GET /v1/jobs — newest first, cursor pagination (docs/api.md conventions).
 export const GET = withRoute(async (request) => {
-  const apiKey = await requireApiKey(request);
+  const { workspaceId } = await requireWorkspace(request);
   const url = new URL(request.url);
 
   let limit = 20;
@@ -44,14 +44,14 @@ export const GET = withRoute(async (request) => {
   }
 
   const query = {
-    where: { workspaceId: apiKey.workspaceId },
+    where: { workspaceId },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: limit + 1,
   };
   const cursor = url.searchParams.get("cursor");
   if (cursor) {
     const anchor = await prisma.job.findFirst({
-      where: { id: cursor, workspaceId: apiKey.workspaceId },
+      where: { id: cursor, workspaceId },
     });
     if (!anchor) throw new ApiError("validation_failed", "Invalid cursor.");
     query.cursor = { id: cursor };
@@ -75,7 +75,7 @@ export const GET = withRoute(async (request) => {
 });
 
 export const POST = withRoute(async (request) => {
-  const apiKey = await requireApiKey(request);
+  const { workspaceId } = await requireWorkspace(request);
 
   let body;
   try {
@@ -109,7 +109,7 @@ export const POST = withRoute(async (request) => {
   if (idempotencyKey) {
     const existing = await prisma.job.findUnique({
       where: {
-        workspaceId_idempotencyKey: { workspaceId: apiKey.workspaceId, idempotencyKey },
+        workspaceId_idempotencyKey: { workspaceId, idempotencyKey },
       },
     });
     if (existing) return replayResponse(existing, body);
@@ -119,7 +119,7 @@ export const POST = withRoute(async (request) => {
     const job = await prisma.job.create({
       data: {
         id: newId("job"),
-        workspaceId: apiKey.workspaceId,
+        workspaceId,
         modelSlug: model.slug,
         input: body.input,
         webhookUrl,
@@ -134,7 +134,7 @@ export const POST = withRoute(async (request) => {
     if (err.code === "P2002" && idempotencyKey) {
       const existing = await prisma.job.findUnique({
         where: {
-          workspaceId_idempotencyKey: { workspaceId: apiKey.workspaceId, idempotencyKey },
+          workspaceId_idempotencyKey: { workspaceId, idempotencyKey },
         },
       });
       if (existing) return replayResponse(existing, body);

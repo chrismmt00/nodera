@@ -2,7 +2,7 @@ import { prisma } from "@nodera/db";
 import { getStorage } from "@nodera/storage";
 import { createLogger } from "@nodera/shared";
 import { withRoute, ApiError } from "@/lib/api/errors.js";
-import { requireApiKey } from "@/lib/api/auth.js";
+import { requireWorkspace } from "@/lib/api/auth.js";
 
 const log = createLogger("web");
 
@@ -33,12 +33,12 @@ function winningRun(job, runs) {
 }
 
 export const GET = withRoute(async (request, ctx) => {
-  const apiKey = await requireApiKey(request);
+  const { workspaceId } = await requireWorkspace(request);
   const { id } = await ctx.params;
 
   // Cross-workspace access is indistinguishable from a missing job.
   const job = await prisma.job.findFirst({
-    where: { id, workspaceId: apiKey.workspaceId },
+    where: { id, workspaceId },
     include: {
       runs: { orderBy: { assignedAt: "asc" }, include: { artifacts: true } },
     },

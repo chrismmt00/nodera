@@ -1,5 +1,6 @@
 import { prisma, sha256 } from "@nodera/db";
 import { ApiError } from "./errors.js";
+import { verifySessionToken, SESSION_COOKIE } from "./session.js";
 
 // Customer auth: x-api-key. Hashed lookup; revoked keys fail immediately.
 export async function requireApiKey(request) {
@@ -10,6 +11,35 @@ export async function requireApiKey(request) {
     throw new ApiError("unauthorized", "Invalid or revoked API key.");
   }
   return apiKey;
+}
+
+// Resolves the caller's workspace from EITHER an x-api-key header OR a valid
+// dashboard session cookie. The same /v1 endpoints serve both — this is the
+// session-authed wrapper (DECISIONS 017), not a parallel route. Returns
+// { workspaceId }.
+export async function requireWorkspace(request) {
+  if (request.headers.get("x-api-key")) {
+    const apiKey = await requireApiKey(request);
+    return { workspaceId: apiKey.workspaceId, via: "api_key" };
+  }
+  const token = readSessionCookie(request);
+  const session = verifySessionToken(token);
+  if (session) {
+    // Confirm the workspace still exists (defence against stale cookies).
+    const ws = await prisma.workspace.findUnique({ where: { id: session.workspaceId } });
+    if (ws) return { workspaceId: ws.id, via: "session" };
+  }
+  throw new ApiError("unauthorized", "Sign in or provide an API key.");
+}
+
+function readSessionCookie(request) {
+  const header = request.headers.get("cookie");
+  if (!header) return null;
+  for (const part of header.split(";")) {
+    const [name, ...rest] = part.trim().split("=");
+    if (name === SESSION_COOKIE) return decodeURIComponent(rest.join("="));
+  }
+  return null;
 }
 
 // Provider auth: x-provider-token. Identity always derives from the token,

@@ -68,7 +68,7 @@ One task = one AI session = one commit. Do them in order. Check the box only whe
 ## Phase 6 — Real image model + public readiness
 
 - [~] **6.1 Image worker (real).** SDXL via Diffusers, writes output.png + usage (images:1). ✓ when: real image end-to-end through the full pipeline. *(Blocked on human: live run needs a ≥12 GB VRAM GPU + NVIDIA Container Toolkit — dev RTX 2080 has 8 GB. Worker, Dockerfile, and agent GPU passthrough built; artifact pipeline proven in Phase 4. See docs/LAUNCH-CHECKLIST.md §2.)*
-- [ ] **6.2 OAuth signup + auto-provision.** Google sign-in creates workspace + first API key, redirects into playground. ✓ when: new account → running a pre-filled job without any setup screen.
+- [~] **6.2 OAuth signup + auto-provision.** Google sign-in creates workspace + first API key, redirects into playground. ✓ when: new account → running a pre-filled job without any setup screen. *(Full OAuth2 flow + auto-provision + session built and tested via dev-login; LIVE Google sign-in blocked on OAuth client credentials — docs/LAUNCH-CHECKLIST.md §3.)*
 - [ ] **6.3 Playground v1.** Model select, prompt, Run, live status, rendered result — using public API only. ✓ when: works for both models.
 - [ ] **6.4 Keys + account page.** View/create/revoke keys, recent jobs. ✓ when: revoked key → 401 immediately.
 - [ ] **6.5 Rate limits + input limits.** Per-key limits, 429 + Retry-After, max prompt bytes enforced at POST /v1/jobs. ✓ when: hammering script gets throttled; queue unharmed.

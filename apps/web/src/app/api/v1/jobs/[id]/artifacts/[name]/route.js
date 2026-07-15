@@ -2,16 +2,16 @@ import { Readable } from "node:stream";
 import { prisma } from "@nodera/db";
 import { getStorage } from "@nodera/storage";
 import { withRoute, ApiError } from "@/lib/api/errors.js";
-import { requireApiKey } from "@/lib/api/auth.js";
+import { requireWorkspace } from "@/lib/api/auth.js";
 
 // GET /v1/jobs/:id/artifacts/:name — streams the bytes, never buffers the
 // whole file (docs/api.md). Workspace-scoped: anything foreign is a 404.
 export const GET = withRoute(async (request, ctx) => {
-  const apiKey = await requireApiKey(request);
+  const { workspaceId } = await requireWorkspace(request);
   const { id, name } = await ctx.params;
 
   const job = await prisma.job.findFirst({
-    where: { id, workspaceId: apiKey.workspaceId },
+    where: { id, workspaceId },
     include: { runs: { include: { artifacts: true }, orderBy: { assignedAt: "asc" } } },
   });
   if (!job) throw new ApiError("not_found", `No job with id '${id}'.`);

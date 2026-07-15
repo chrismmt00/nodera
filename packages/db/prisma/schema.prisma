@@ -57,8 +57,23 @@ model Workspace {
 
   apiKeys ApiKey[]
   jobs    Job[]
+  users   User[]
 
   @@map("workspaces")
+}
+
+model User {
+  id          String   @id
+  email       String   @unique
+  name        String?
+  provider    String   @default("google")
+  workspaceId String   @map("workspace_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@index([workspaceId])
+  @@map("users")
 }
 
 model ApiKey {

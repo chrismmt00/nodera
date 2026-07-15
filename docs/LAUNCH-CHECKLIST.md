@@ -48,3 +48,23 @@ A live generation run needs a provider host with:
    `GET /v1/jobs/:id` returns an `output.png` artifact you can download.
 
 Text (`llama-3.1-8b`) generation is fully live and covered by `npm run smoke`.
+
+## 3. Google OAuth sign-in (task 6.2)
+
+The full OAuth2 flow, auto-provisioning, and session are built. Live Google
+sign-in needs an OAuth client; the dev-login path (`POST /api/auth/dev-login`,
+non-production only) exercises the same provisioning + session code today.
+
+1. Google Cloud Console → APIs & Services → **Credentials** → Create OAuth
+   client ID → **Web application**.
+2. Authorized redirect URI: `<APP_URL>/api/auth/google/callback`
+   (e.g. `http://localhost:3000/api/auth/google/callback` for dev, and the
+   production URL once deployed).
+3. Put the values in `.env`:
+   ```
+   GOOGLE_CLIENT_ID=<client id>
+   GOOGLE_CLIENT_SECRET=<client secret>
+   SESSION_SECRET=<any long random string>
+   ```
+4. Verify: open `<APP_URL>/api/auth/google/start`, sign in, and you land in
+   `/playground` with a workspace + API key already created.
