@@ -19,6 +19,7 @@
     "smoke:r2": "node scripts/r2-smoke.js",
     "test": "node scripts/run-tests.js",
     "test:multi": "node scripts/test-multi-provider.js",
+    "webhook:listen": "node scripts/webhook-receiver.js",
     "postinstall": "prisma generate"
   }
 }
