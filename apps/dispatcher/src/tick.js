@@ -2,6 +2,7 @@
 // (2.3), deadline expiry (2.4) — all bounded by the attempts cap (2.5) —
 // and webhook enqueue on finalization (5.1).
 const { newId, enqueueJobWebhook } = require("@nodera/db");
+const { processWebhookDeliveries } = require("./webhooks.js");
 
 function offlineAfterMs() {
   return parseInt(process.env.PROVIDER_OFFLINE_AFTER_MS || "120000", 10);
@@ -155,8 +156,9 @@ async function runTick(prisma, log) {
   const expired = await expireOverdueRuns(prisma, log);
   const offlined = await failOfflineProviderRuns(prisma, log);
   const assigned = await assignQueuedJobs(prisma, log);
+  const webhooks = await processWebhookDeliveries(prisma, log);
   const queued = await prisma.job.count({ where: { status: "queued" } });
-  return { queued, assigned, expired, offlined };
+  return { queued, assigned, expired, offlined, webhooks };
 }
 
 module.exports = { runTick };

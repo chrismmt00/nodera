@@ -59,8 +59,8 @@ One task = one AI session = one commit. Do them in order. Check the box only whe
 ## Phase 5 — Webhooks
 
 - [x] **5.1 Enqueue on final state.** webhook_deliveries row created when a job with webhook_url finalizes. ✓ when: exactly one row per finalization (idempotent with duplicate reports).
-- [ ] **5.2 Delivery worker.** Batch per tick, timeout, backoff schedule, terminal failed state. ✓ when: schedule followed exactly in a clock-controlled test.
-- [ ] **5.3 Signing + SSRF guard.** HMAC + timestamp headers; resolve host, refuse private/loopback/link-local. ✓ when: signature verifies with the api.md snippet; `http://169.254.169.254` and `http://localhost` are refused (test).
+- [x] **5.2 Delivery worker.** Batch per tick, timeout, backoff schedule, terminal failed state. ✓ when: schedule followed exactly in a clock-controlled test.
+- [x] **5.3 Signing + SSRF guard.** HMAC + timestamp headers; resolve host, refuse private/loopback/link-local. ✓ when: signature verifies with the api.md snippet; `http://169.254.169.254` and `http://localhost` are refused (test).
 - [ ] **5.4 Receiver harness.** scripts/webhook-receiver.js honoring WEBHOOK_FAILS_BEFORE_SUCCESS. ✓ when: fail-twice-then-succeed observed end-to-end with correct retry gaps.
 
 **GATE 5:** signed webhook survives two induced failures; signature verifies.
