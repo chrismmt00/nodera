@@ -36,6 +36,26 @@ test("buildDockerArgs: hardened, /job is the only mount, no privileged", () => {
   assert.equal(args[args.length - 1], "nodera/llm-worker");
 });
 
+test("buildDockerArgs: image models get --gpus all, llm models do not", () => {
+  const imageArgs = buildDockerArgs({
+    containerName: "nodera-run-img",
+    jobDir: "/jobs/img",
+    image: "nodera/image-worker",
+    gpu: true,
+    memory: "12g",
+  }).join(" ");
+  assert.ok(imageArgs.includes("--gpus all"), "image worker must request the GPU");
+  assert.ok(imageArgs.includes("--memory 12g"));
+  assert.ok(!imageArgs.includes("--privileged"), "GPU passthrough is not privileged mode");
+
+  const llmArgs = buildDockerArgs({
+    containerName: "nodera-run-llm",
+    jobDir: "/jobs/llm",
+    image: "nodera/llm-worker",
+  }).join(" ");
+  assert.ok(!llmArgs.includes("--gpus"), "llm worker must not request the GPU");
+});
+
 test("image allowlist blocks non-menu images", async () => {
   const menu = [{ slug: "llama-3.1-8b", workerImage: "nodera/llm-worker" }];
   assert.deepEqual([...imageAllowlist(menu)], ["nodera/llm-worker"]);

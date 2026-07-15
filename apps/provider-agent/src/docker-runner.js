@@ -15,7 +15,7 @@ function imageAllowlist(menu) {
 }
 
 // Pure so tests can assert the flags without Docker.
-function buildDockerArgs({ containerName, jobDir, image, env = {} }) {
+function buildDockerArgs({ containerName, jobDir, image, env = {}, gpu = false, memory }) {
   const args = [
     "run",
     "--rm",
@@ -26,12 +26,15 @@ function buildDockerArgs({ containerName, jobDir, image, env = {} }) {
     "--security-opt", "no-new-privileges",
     "--read-only",
     "--tmpfs", "/tmp",
-    "--memory", process.env.AGENT_WORKER_MEMORY || "2g",
+    "--memory", memory || process.env.AGENT_WORKER_MEMORY || "2g",
     "--cpus", process.env.AGENT_WORKER_CPUS || "2",
     "--pids-limit", "256",
     // Workers reach the provider host's model server and nothing of ours.
     "--add-host", "host.docker.internal:host-gateway",
   ];
+  // Image models need the GPU; the toolkit passthrough is the one capability
+  // exception, still no privileged mode and still only /job mounted.
+  if (gpu) args.push("--gpus", "all");
   for (const [key, value] of Object.entries(env)) {
     args.push("-e", `${key}=${value}`);
   }
@@ -66,11 +69,18 @@ async function runJob({ run, model, jobsDir, log, menu = MODELS }) {
     input: run.input,
   });
 
+  const isImage = model.modality === "image";
   const args = buildDockerArgs({
     containerName,
     jobDir,
     image: model.workerImage,
-    env: { OLLAMA_URL: process.env.OLLAMA_URL || "http://host.docker.internal:11434" },
+    gpu: isImage,
+    // Image models load large weights; give them more RAM than the LLM worker.
+    memory: isImage ? process.env.AGENT_IMAGE_WORKER_MEMORY || "12g" : undefined,
+    // The LLM worker calls the host Ollama; the image worker bakes weights in.
+    env: isImage
+      ? {}
+      : { OLLAMA_URL: process.env.OLLAMA_URL || "http://host.docker.internal:11434" },
   });
 
   const maxRuntimeMs = model.maxRuntimeS * 1000;
