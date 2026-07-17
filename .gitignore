@@ -34,6 +34,11 @@ yarn-error.log*
 .env*
 !.env.example
 
+# local runtime state (may contain provider credentials or job contents)
+.nodera-agent.json
+storage/
+apps/web/storage/
+
 # vercel
 .vercel
 

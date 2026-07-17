@@ -23,8 +23,245 @@ a:hover {
   color: #4a5164;
 }
 textarea,
-input {
+input,
+button,
+select {
   font-family: inherit;
+}
+
+.nodera-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+.nodera-topbar {
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 28px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 12, 18, 0.9);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  backdrop-filter: blur(10px);
+}
+.nodera-brand {
+  color: #e8ecf4;
+  text-decoration: none;
+  font-size: 18px;
+  font-weight: 700;
+}
+.nodera-brand span,
+.nodera-nav-links a {
+  color: #5de6ff;
+}
+.nodera-nav-links {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+}
+.nodera-nav-links a {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid #5de6ff;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+}
+.nodera-account {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #8b93a7;
+  font-size: 12px;
+}
+.nodera-account > span {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nodera-page {
+  width: min(100%, 920px);
+  margin: 0 auto;
+  padding: 26px 28px 48px;
+  flex: 1;
+}
+.nodera-page-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.nodera-centered-state,
+.nodera-signin-wrap {
+  min-height: calc(100vh - 150px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.nodera-signin-wrap {
+  text-align: left;
+}
+.nodera-google-button {
+  display: block;
+  margin-top: 18px;
+  border-radius: 9px;
+  padding: 10px 16px;
+  background: #5de6ff;
+  color: #06121a;
+  text-align: center;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+}
+.nodera-dev-login {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 8px;
+  margin-top: 10px;
+}
+.nodera-dev-login label {
+  grid-column: 1 / -1;
+}
+.nodera-field-label,
+.nodera-option-field span {
+  display: block;
+  margin-bottom: 6px;
+  color: #8b93a7;
+  font-size: 11px;
+  font-weight: 500;
+}
+.nodera-input,
+.nodera-select,
+.nodera-textarea,
+.nodera-option-field input {
+  width: 100%;
+  border: 1px solid #1e2431;
+  border-radius: 8px;
+  background: #0b0d13;
+  color: #e8ecf4;
+  padding: 9px 11px;
+  outline: none;
+}
+.nodera-input:focus,
+.nodera-select:focus,
+.nodera-textarea:focus,
+.nodera-option-field input:focus {
+  border-color: rgba(93, 230, 255, 0.65);
+  box-shadow: 0 0 0 3px rgba(93, 230, 255, 0.08);
+}
+.nodera-runner {
+  display: grid;
+  gap: 14px;
+}
+.nodera-textarea {
+  display: block;
+  min-height: 112px;
+  resize: vertical;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.nodera-options-toggle {
+  border: 0;
+  background: transparent;
+  color: #8b93a7;
+  padding: 10px 0 0;
+  cursor: pointer;
+  font-size: 12px;
+}
+.nodera-options-toggle span {
+  margin-left: 4px;
+  color: #5de6ff;
+}
+.nodera-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid #1e2431;
+  border-radius: 10px;
+  background: #0b0d13;
+}
+.nodera-option-field input {
+  font-family: var(--font-ibm-plex-mono), monospace;
+  font-size: 12px;
+}
+.nodera-form-actions,
+.nodera-result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 14px;
+}
+.nodera-pipeline {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.nodera-pipeline-step {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  color: #4a5164;
+  font-size: 11px;
+}
+.nodera-pipeline-step.is-active {
+  color: #d7deeb;
+}
+.nodera-result-image {
+  display: block;
+  width: min(100%, 640px);
+  height: auto;
+  margin-top: 12px;
+  border: 1px solid #1e2431;
+  border-radius: 10px;
+}
+
+@media (max-width: 700px) {
+  .nodera-topbar {
+    gap: 14px;
+    padding: 0 16px;
+  }
+  .nodera-nav-links {
+    display: none;
+  }
+  .nodera-account > span {
+    display: none;
+  }
+  .nodera-page {
+    padding: 20px 14px 36px;
+  }
+  .nodera-page-heading,
+  .nodera-form-actions,
+  .nodera-result-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .nodera-form-actions button {
+    width: 100%;
+  }
+  .nodera-pipeline {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .nodera-options-grid,
+  .nodera-dev-login {
+    grid-template-columns: 1fr;
+  }
 }
 
 @keyframes npulse {
