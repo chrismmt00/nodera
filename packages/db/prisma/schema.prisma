@@ -209,3 +209,15 @@ model WebhookDelivery {
   @@index([status, nextAttemptAt])
   @@map("webhook_deliveries")
 }
+
+model RateLimitWindow {
+  principalId String   @map("principal_id")
+  action      String
+  windowStart DateTime @map("window_start")
+  count       Int      @default(1)
+  expiresAt   DateTime @map("expires_at")
+
+  @@id([principalId, action, windowStart])
+  @@index([expiresAt])
+  @@map("rate_limit_windows")
+}

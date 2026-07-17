@@ -1,5 +1,47 @@
 import { ApiError } from "./errors.js";
 
+export async function readJsonBody(request, maxBytes) {
+  const contentLength = Number(request.headers.get("content-length"));
+  if (Number.isFinite(contentLength) && contentLength > maxBytes) {
+    throw new ApiError("input_too_large", `Request body exceeds the ${maxBytes}-byte limit.`);
+  }
+  if (!request.body) {
+    throw new ApiError("validation_failed", "Request body must be valid JSON.");
+  }
+
+  const reader = request.body.getReader();
+  const chunks = [];
+  let totalBytes = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalBytes += value.byteLength;
+      if (totalBytes > maxBytes) {
+        await reader.cancel();
+        throw new ApiError("input_too_large", `Request body exceeds the ${maxBytes}-byte limit.`);
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const bytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  try {
+    const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    return JSON.parse(text);
+  } catch {
+    throw new ApiError("validation_failed", "Request body must be valid JSON.");
+  }
+}
+
 // Validates a job's input against the model's params schema from the DB —
 // the same definition GET /v1/models publishes (one definition, two uses).
 export function validateJobInput(params, input) {

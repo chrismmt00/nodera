@@ -15,23 +15,9 @@ plan, the gotchas, and where the code goes.
 
 ## Phase 6 — remainder (public readiness)
 
-Phase 6.4 is implemented, tested, and browser-verified. Live SDXL rendering
-remains grouped with the Phase 6.1 hardware block. The next buildable task is
-6.5.
-
-### 6.5 Rate limits + input limits  ← highest-value, fully buildable now
-- Per-key (and per-session-workspace) rate limiting on `POST /v1/jobs`: return
-  **429** with **`Retry-After: <seconds>`** and code `rate_limited` (already in
-  the error map). Also enforce max prompt bytes (the model `params.max_bytes`
-  already does per-field; add a global request-size cap) and max jobs/minute.
-- Pick conservative numbers; put them in `.env` (e.g. `RATE_LIMIT_JOBS_PER_MIN`).
-- Implementation: a small fixed-window or token-bucket counter. In-process Map
-  is fine for single-instance dev; note in DECISIONS that multi-instance needs
-  a shared store (Postgres table or Redis) — Postgres keeps the "no new deps"
-  rule. A `rate_limits` table keyed by (workspace, window) works.
-- Acceptance: a hammering script gets throttled (429 + correct Retry-After),
-  other keys unaffected, the queue is unharmed. **This is also Phase 9.6** — do
-  it well here and 9.6 becomes a load-scale re-verification.
+Phase 6.5 is implemented and tested under concurrent API-key and session
+bursts. Live SDXL rendering remains grouped with the Phase 6.1 hardware block.
+The next buildable task is 6.6.
 
 ### 6.6 Public docs
 - Quickstart + per-endpoint curl examples + the webhook verification snippet
@@ -197,11 +183,9 @@ remaining `[~]` item has exact LAUNCH-CHECKLIST instructions. **Gate 8 + Gate 9
 
 ## Known open threads to resolve along the way
 
-1. **Rate-limit store (6.5/9.6):** in-process Map for single instance;
-   Postgres-backed for multi-instance/production. Decide before 6.7.
-2. **Windows provider path (blueprint §11 flag):** Docker Desktop is friction
+1. **Windows provider path (blueprint §11 flag):** Docker Desktop is friction
    for non-technical providers; a native (bundled-Ollama) path may be needed
    for the consumer app. Not v1-blocking; don't forget.
-3. **`docs/TASKS.md` line 24** still says Phase 1 smoke "may assign directly in
+2. **`docs/TASKS.md` line 24** still says Phase 1 smoke "may assign directly in
    DB" — smoke was upgraded to the real dispatcher+agent in 2.2/3.5; the note is
    stale but harmless.

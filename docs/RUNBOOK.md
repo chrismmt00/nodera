@@ -31,6 +31,7 @@ docker build -t nodera/llm-worker workers/llm-worker
 | `npm run smoke` | full REAL lifecycle: API → dispatcher → agent → Docker worker → Ollama |
 | `npm run test:multi` | 2 fake providers drain 20 jobs; concurrency/claim assertions |
 | `npx prisma migrate dev` | apply schema changes |
+| `npx prisma generate` | regenerate the Prisma client after changing the schema |
 | `npm run seed` | idempotent reseed |
 
 ## Health checks
@@ -59,5 +60,9 @@ cleaned per run; artifacts live under `STORAGE_ROOT` (default `storage/`).
 - `DATABASE_URL` — Postgres on host port 5433 (native PG may own 5432 — DECISIONS 022)
 - `DOCKER_BIN` — absolute path to docker CLI if not on PATH
 - `OLLAMA_URL` — model server as seen FROM CONTAINERS (`host.docker.internal`)
+- `RATE_LIMIT_JOBS_PER_MIN` — authenticated `POST /v1/jobs` requests allowed per
+  API key or workspace session each minute (default 60)
+- `MAX_JOB_REQUEST_BYTES` — hard cap for the complete job JSON body (default
+  65,536 bytes; model prompt limits may be lower)
 
 (Deploy, backup/restore, and triage sections arrive with task 9.10.)

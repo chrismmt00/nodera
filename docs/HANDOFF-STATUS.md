@@ -12,17 +12,20 @@ checkbox list is `docs/TASKS.md`; this doc adds the context, gotchas, and
 ## TL;DR
 
 - **Phases 0–5 are complete and their gates pass.** Phase 6 is in progress.
-- **70 integration tests pass** (`npm test`), plus `npm run smoke` (real
+- **73 integration tests pass** (`npm test`), plus `npm run smoke` (real
   end-to-end AI), `npm run test:multi` (multi-provider drain).
 - The system runs a **real** job end to end: customer API → dispatcher →
   provider agent → hardened Docker worker → local Ollama (`llama3.1:8b` on GPU)
   → metered result → webhook. Verified live.
-- Everything is committed through **Phase 6.4**.
+- Everything is committed through **Phase 6.5**.
 - **Phase 6.3 (playground) is implemented and verified** with a live LLM run,
   both model request paths, desktop/mobile checks, and browser console review.
 - **Phase 6.4 (account + keys) is implemented and verified:** session-only key
   management, recent jobs through `/v1`, reveal-once creation, and immediate
   revocation are covered by integration and browser checks.
+- **Phase 6.5 (abuse limits) is implemented and verified:** database-backed
+  per-key/session throttling, contract `429` responses, and bounded request
+  parsing protect the queue and work across control-plane instances.
 - Several tasks are **`[~]` blocked on human-only resources** (R2 creds,
   Google OAuth creds, a ≥12 GB GPU, a VPS/domain, live stopwatch tests). Each
   has exact instructions in `docs/LAUNCH-CHECKLIST.md`.
@@ -43,6 +46,7 @@ checkbox list is `docs/TASKS.md`; this doc adds the context, gotchas, and
 | 6.2 OAuth signup | `[~]` | full flow + auto-provision + sessions built & tested via dev-login; **live Google blocked on creds** |
 | 6.3 Playground | `[~]` | reusable live model runner; LLM verified in browser; **live SDXL render inherits the 6.1 GPU block** |
 | 6.4 Account + keys | ✅ | session-only view/create/revoke, reveal-once plaintext, recent jobs through `/v1`, immediate revocation |
+| 6.5 Abuse limits | ✅ | atomic Postgres fixed windows, 60 requests/minute, 64 KiB job-body cap, model prompt caps |
 
 \* Gate 4 passed with a documented exception: everything is proven on the
 local storage backend; live R2 verification needs credentials (DECISIONS 026).
@@ -91,6 +95,24 @@ local storage backend; live R2 verification needs credentials (DECISIONS 026).
 
 ---
 
+## Phase 6.5 verification
+
+- `POST /v1/jobs` uses an atomic Prisma upsert into `rate_limit_windows`.
+  API-key callers are isolated by key ID; dashboard callers are isolated by
+  workspace session. No key plaintext or hash is stored in the counter.
+- The runtime defaults are 60 authenticated job POSTs per minute and a 65,536
+  byte whole-request cap, configurable with `RATE_LIMIT_JOBS_PER_MIN` and
+  `MAX_JOB_REQUEST_BYTES`. Model-specific prompt byte limits still apply.
+- Rejected bursts return the contract error shape with code `rate_limited`,
+  status `429`, and an integer `Retry-After` for the current fixed window.
+- JSON is read from the request stream with a hard byte ceiling, including when
+  `Content-Length` is absent. Oversized bodies never create queue rows.
+- `tests/rate-limits.test.js` concurrently hammers API-key and session callers,
+  proves exact accepted counts and credential isolation, and confirms every
+  accepted row remains a valid queued job. All 73 integration tests pass.
+
+---
+
 ## How to run & verify (Windows dev box)
 
 ```bash
@@ -99,7 +121,7 @@ docker compose up -d              # Postgres on localhost:5433
 npx prisma migrate dev            # apply migrations
 npm run seed                      # dev workspace + API key (printed once) + models
 docker build -t nodera/llm-worker workers/llm-worker
-npm test                          # 70 tests (boots the app itself; needs Docker)
+npm test                          # 73 tests (boots the app itself; needs Docker)
 npm run smoke                     # real end-to-end (needs Ollama + llama3.1:8b)
 npm run dev:all                   # web(:3000) + dispatcher(:3001) + one agent
 ```
@@ -126,6 +148,9 @@ Full command list and reset steps: `docs/RUNBOOK.md`.
   schema or a shared module — the test runner reuses an already-healthy server,
   which may hold a stale in-memory Prisma client (this caused the `prisma.user
   is undefined` failure until the server was restarted after `add_users`).
+- **Run `npx prisma generate` after schema changes.** Prisma 7's
+  `migrate dev` applied the Phase 6.5 migration but did not regenerate the
+  client; the new model remained undefined until generation ran explicitly.
 - **Ollama** is installed at
   `C:/Users/Chris/AppData/Local/Programs/Ollama/ollama`, with `llama3.1:8b`
   pulled and `nodera/llm-worker` image built. Workers reach it via

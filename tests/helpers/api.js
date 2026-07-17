@@ -19,6 +19,11 @@ async function createWorkspaceFixture() {
 
 // Deletes the workspace and everything hanging off it, respecting FK order.
 async function destroyWorkspaceFixture(workspace) {
+  const apiKeys = await prisma.apiKey.findMany({ where: { workspaceId: workspace.id } });
+  const rateLimitPrincipals = [
+    `session:${workspace.id}`,
+    ...apiKeys.map((key) => `api_key:${key.id}`),
+  ];
   const jobs = await prisma.job.findMany({ where: { workspaceId: workspace.id } });
   const jobIds = jobs.map((j) => j.id);
   const runs = await prisma.run.findMany({ where: { jobId: { in: jobIds } } });
@@ -27,6 +32,9 @@ async function destroyWorkspaceFixture(workspace) {
   await prisma.webhookDelivery.deleteMany({ where: { jobId: { in: jobIds } } });
   await prisma.run.deleteMany({ where: { id: { in: runIds } } });
   await prisma.job.deleteMany({ where: { id: { in: jobIds } } });
+  await prisma.rateLimitWindow.deleteMany({
+    where: { principalId: { in: rateLimitPrincipals } },
+  });
   await prisma.apiKey.deleteMany({ where: { workspaceId: workspace.id } });
   await prisma.workspace.delete({ where: { id: workspace.id } });
 }

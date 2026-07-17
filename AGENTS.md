@@ -39,7 +39,7 @@ Never say "job" when you mean "run." Retries create new runs, never new jobs.
 1. Read the task and its acceptance criteria in `docs/TASKS.md`; read the blueprint section it references.
 2. Implement the smallest change that satisfies the criteria.
 3. Write or update the tests named in the criteria.
-4. Run: migrations (if schema changed), `npm test` (if tests exist yet), `npm run smoke`.
+4. Run: migrations + `npx prisma generate` (if schema changed), `npm test` (if tests exist yet), `npm run smoke`.
 5. Check the box in `docs/TASKS.md`. If a decision was made, add a line to `docs/DECISIONS.md`.
 6. Commit: `Phase X.Y: <short description>`. One task, one commit.
 
@@ -59,7 +59,7 @@ Never say "job" when you mean "run." Retries create new runs, never new jobs.
 
 - `docker compose up -d` — Postgres for dev
 - `npm run dev:all` — control plane + dispatcher + one dev provider agent
-- `npx prisma migrate dev` — apply schema changes
+- `npx prisma migrate dev` — apply schema changes; then run `npx prisma generate`
 - `npm run seed` — dev workspace, API key, menu models
 - `npm run smoke` — full job lifecycle check (must pass before every commit)
 - `npm test` — integration tests

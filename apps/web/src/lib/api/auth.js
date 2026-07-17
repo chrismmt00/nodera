@@ -20,14 +20,24 @@ export async function requireApiKey(request) {
 export async function requireWorkspace(request) {
   if (request.headers.get("x-api-key")) {
     const apiKey = await requireApiKey(request);
-    return { workspaceId: apiKey.workspaceId, via: "api_key" };
+    return {
+      workspaceId: apiKey.workspaceId,
+      via: "api_key",
+      rateLimitPrincipal: `api_key:${apiKey.id}`,
+    };
   }
   const token = readSessionCookie(request);
   const session = verifySessionToken(token);
   if (session) {
     // Confirm the workspace still exists (defence against stale cookies).
     const ws = await prisma.workspace.findUnique({ where: { id: session.workspaceId } });
-    if (ws) return { workspaceId: ws.id, via: "session" };
+    if (ws) {
+      return {
+        workspaceId: ws.id,
+        via: "session",
+        rateLimitPrincipal: `session:${ws.id}`,
+      };
+    }
   }
   throw new ApiError("unauthorized", "Sign in or provide an API key.");
 }

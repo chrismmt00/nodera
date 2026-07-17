@@ -9,6 +9,8 @@ const { loadEnv } = require("@nodera/shared");
 const ROOT = path.join(__dirname, "..");
 loadEnv(ROOT);
 process.env.STORAGE_ROOT = path.resolve(ROOT, process.env.STORAGE_ROOT || "storage");
+// Keep the HTTP hammer tests fast while leaving the runtime default at 60.
+process.env.RATE_LIMIT_JOBS_PER_MIN = "20";
 
 const { ensureWeb } = require("./lib/ensure-web.js");
 

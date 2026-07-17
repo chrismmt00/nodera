@@ -1,7 +1,13 @@
 import { prisma, newId } from "@nodera/db";
 import { withRoute, ApiError } from "@/lib/api/errors.js";
 import { requireWorkspace } from "@/lib/api/auth.js";
-import { validateJobInput, validateWebhookUrl, canonicalJson } from "@/lib/api/validate.js";
+import { enforceJobCreateRateLimit, maxJobRequestBytes } from "@/lib/api/rate-limit.js";
+import {
+  readJsonBody,
+  validateJobInput,
+  validateWebhookUrl,
+  canonicalJson,
+} from "@/lib/api/validate.js";
 
 const BODY_FIELDS = new Set(["model", "input", "webhook_url"]);
 
@@ -75,12 +81,14 @@ export const GET = withRoute(async (request) => {
 });
 
 export const POST = withRoute(async (request) => {
-  const { workspaceId } = await requireWorkspace(request);
+  const { workspaceId, via, rateLimitPrincipal } = await requireWorkspace(request);
+  await enforceJobCreateRateLimit({ principalId: rateLimitPrincipal, via });
 
   let body;
   try {
-    body = await request.json();
-  } catch {
+    body = await readJsonBody(request, maxJobRequestBytes());
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
     throw new ApiError("validation_failed", "Request body must be valid JSON.");
   }
   if (body === null || typeof body !== "object" || Array.isArray(body)) {
