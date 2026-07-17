@@ -3,6 +3,7 @@ const { PrismaPg } = require("@prisma/adapter-pg");
 const { newId, sha256, newSecret } = require("./ids-internal.js");
 const { enqueueJobWebhook } = require("./webhooks.js");
 const { provisionUserWorkspace } = require("./provision.js");
+const { buildCustomerOnboardingReport } = require("./onboarding.js");
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is not set — copy .env.example to .env (see README).");
@@ -30,4 +31,5 @@ module.exports = {
   ensureMenuModels,
   enqueueJobWebhook,
   provisionUserWorkspace,
+  buildCustomerOnboardingReport,
 };

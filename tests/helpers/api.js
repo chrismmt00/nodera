@@ -35,6 +35,7 @@ async function destroyWorkspaceFixture(workspace) {
   await prisma.rateLimitWindow.deleteMany({
     where: { principalId: { in: rateLimitPrincipals } },
   });
+  await prisma.user.deleteMany({ where: { workspaceId: workspace.id } });
   await prisma.apiKey.deleteMany({ where: { workspaceId: workspace.id } });
   await prisma.workspace.delete({ where: { id: workspace.id } });
 }

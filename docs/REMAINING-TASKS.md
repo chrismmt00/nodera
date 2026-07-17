@@ -15,10 +15,9 @@ plan, the gotchas, and where the code goes.
 
 ## Phase 6 — remainder (public readiness)
 
-Phase 6.7's buildable deployment package is implemented and verified locally.
-Live SDXL rendering remains grouped with the Phase 6.1 hardware block. Phase
-6.7 remains `[~]` until the owner supplies the external infrastructure; the
-next buildable task is 6.8.
+All buildable Phase 6 work is implemented. Live SDXL remains grouped with the
+Phase 6.1 hardware block; 6.7 awaits external infrastructure, and 6.8 awaits an
+unassisted real-person stopwatch. The next buildable task is 7.1.
 
 ### 6.7 Production deploy — **[~] blocked-on-human**
 - Complete in repo: fail-fast production env validation; standalone web,
@@ -33,10 +32,16 @@ next buildable task is 6.8.
   Exact owner steps are in `docs/LAUNCH-CHECKLIST.md` §4.
 
 ### 6.8 Stopwatch — **[~] blocked-on-human**
-- Record signup→first-succeeded-job per workspace; test the 60 s target with a
-  real person. Build the measurement (a timestamp from user creation to first
-  `succeeded` job is derivable from existing rows — `users.created_at` →
-  earliest `jobs.finalized_at`). The "real person under 60 s" is the human step.
+- Complete in repo: `npm run --silent onboarding:report` derives the earliest
+  `users.created_at` → earliest succeeded `jobs.finalized_at` per workspace,
+  reports strict under-60 results and aggregate median/counts, and emits no
+  emails, prompts, or credentials. Failed jobs and later successes are ignored.
+- Verified: integration coverage proves multi-user workspaces, pending users,
+  and the exact 60-second boundary. The current dev workspace measures 35.298s,
+  but that is not an unassisted human acceptance run.
+- Still human: have a real new user complete signup → first succeeded job
+  without coaching, then verify the report row is under 60 seconds. Exact steps
+  are in `docs/LAUNCH-CHECKLIST.md` §5.
 
 **GATE 6:** Scope success criteria 1 & 2 pass; throttling holds. (Criteria 1
 [<60 s] and the production bits depend on 6.7/6.8 human steps.)

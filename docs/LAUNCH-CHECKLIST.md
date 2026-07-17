@@ -91,3 +91,25 @@ steps require owner-controlled infrastructure and credentials:
 6. Create a fresh external customer key, submit a real job using only `/docs`,
    and verify it reaches `succeeded` with downloadable output. This final run
    is the Phase 6.7 acceptance test.
+
+## 5. Customer onboarding stopwatch (task 6.8)
+
+The database-backed measurement and JSON report are implemented. Final
+acceptance requires a real person who has not been coached through the flow:
+
+1. Keep an approved, ready LLM provider online so queue wait measures the real
+   product path rather than a known outage.
+2. Ask a new user to start at the landing page, sign in, and run the pre-filled
+   text job without verbal guidance. Do not use an existing workspace.
+3. After the job succeeds, run:
+   ```bash
+   npm run --silent onboarding:report
+   ```
+4. Find the newest workspace row and confirm `target_result` is
+   `under_target` and `seconds_to_first_success` is below 60.
+5. Record the observed value and date in `docs/HANDOFF-STATUS.md`. If it misses,
+   keep task 6.8 open and fix the onboarding flow before repeating with another
+   new user.
+
+The existing dev measurement of 35.298s validates instrumentation only; it is
+not the unassisted human acceptance result.

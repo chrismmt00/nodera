@@ -66,3 +66,4 @@ Never say "job" when you mean "run." Retries create new runs, never new jobs.
 - `npm run migrate:deploy` — apply committed migrations in production
 - `npm run start:production:web` — validate production config and start the control plane
 - `npm run start:production:dispatcher` — validate production config and start the dispatcher
+- `npm run onboarding:report` — report signup-to-first-success timing per workspace

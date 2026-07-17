@@ -33,12 +33,28 @@ docker build -t nodera/llm-worker workers/llm-worker
 | `npx prisma migrate dev` | apply schema changes |
 | `npx prisma generate` | regenerate the Prisma client after changing the schema |
 | `npm run seed` | idempotent reseed |
+| `npm run --silent onboarding:report` | JSON signup→first-succeeded-job timing per workspace |
 
 ## Health checks
 
 - Control plane: `GET http://localhost:3000/healthz` → `{"ok":true}`
 - Dispatcher: `GET http://localhost:3001/healthz` → `{"ok":true,"last_tick_at":...}`
 - Ollama: `GET http://localhost:11434/api/tags`
+
+## Customer onboarding timing
+
+Run the privacy-minimized report against the configured database:
+
+```bash
+npm run --silent onboarding:report
+```
+
+For each workspace with a user, it reports the earliest signup, earliest
+succeeded job, elapsed seconds, and whether the strict under-60-second target
+was met. Summary counts and the completed-workspace median are included. It
+does not emit emails, names, prompts, or credentials. A `pending` row has no
+succeeded job yet; `invalid_timestamps` indicates inconsistent source data that
+must be investigated rather than counted.
 
 ## Reset the world
 

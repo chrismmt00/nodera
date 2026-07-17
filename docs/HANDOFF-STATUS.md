@@ -12,13 +12,13 @@ checkbox list is `docs/TASKS.md`; this doc adds the context, gotchas, and
 ## TL;DR
 
 - **Phases 0–5 are complete and their gates pass.** Phase 6 is in progress.
-- **79 integration tests pass** (`npm test`), plus `npm run smoke` (real
+- **81 integration tests pass** (`npm test`), plus `npm run smoke` (real
   end-to-end AI), `npm run test:multi` (multi-provider drain).
 - The system runs a **real** job end to end: customer API → dispatcher →
   provider agent → hardened Docker worker → local Ollama (`llama3.1:8b` on GPU)
   → metered result → webhook. Verified live.
-- Everything buildable is committed through **Phase 6.7**; its external
-  production acceptance test remains owner-blocked.
+- Everything buildable is committed through **Phase 6.8**; external production
+  and real-person acceptance tests remain owner-blocked.
 - **Phase 6.3 (playground) is implemented and verified** with a live LLM run,
   both model request paths, desktop/mobile checks, and browser console review.
 - **Phase 6.4 (account + keys) is implemented and verified:** session-only key
@@ -33,6 +33,9 @@ checkbox list is `docs/TASKS.md`; this doc adds the context, gotchas, and
 - **Phase 6.7 (production deploy) is packaged and locally verified:** separate
   production images, private Postgres, automatic migrations, health gates,
   fail-fast env validation, and container hardening are ready for a host.
+- **Phase 6.8 (customer stopwatch) is instrumented and verified:** a read-only
+  Prisma report measures signup to first succeeded job per workspace without
+  exposing user or job content. The dev row is 35.298s; human acceptance waits.
 - Several tasks are **`[~]` blocked on human-only resources** (R2 creds,
   Google OAuth creds, a ≥12 GB GPU, a VPS/domain, live stopwatch tests). Each
   has exact instructions in `docs/LAUNCH-CHECKLIST.md`.
@@ -56,6 +59,7 @@ checkbox list is `docs/TASKS.md`; this doc adds the context, gotchas, and
 | 6.5 Abuse limits | ✅ | atomic Postgres fixed windows, 60 requests/minute, 64 KiB job-body cap, model prompt caps |
 | 6.6 Public docs | ✅ | responsive `/docs`, executable quickstart, all customer/provider endpoints, webhook verification |
 | 6.7 Production deploy | `[~]` | deploy package verified locally; VPS/domain/TLS/live credentials and external job remain owner-blocked |
+| 6.8 Customer stopwatch | `[~]` | measurement/report tested; dev row 35.298s; unassisted real-person run remains owner-blocked |
 
 \* Gate 4 passed with a documented exception: everything is proven on the
 local storage backend; live R2 verification needs credentials (DECISIONS 026).
@@ -118,7 +122,7 @@ local storage backend; live R2 verification needs credentials (DECISIONS 026).
   `Content-Length` is absent. Oversized bodies never create queue rows.
 - `tests/rate-limits.test.js` concurrently hammers API-key and session callers,
   proves exact accepted counts and credential isolation, and confirms every
-  accepted row remains a valid queued job. All 79 integration tests pass.
+  accepted row remains a valid queued job. All 81 integration tests pass.
 
 ---
 
@@ -137,7 +141,7 @@ local storage backend; live R2 verification needs credentials (DECISIONS 026).
   contract and remains an explicit follow-up rather than an invented endpoint.
 - `tests/public-docs.test.js` provisions a fresh workspace and API key, executes
   the published quickstart payload through real `curl`, and retrieves the
-  resulting queued job. The complete suite passes 79/79.
+  resulting queued job. The complete suite passes 81/81.
 - Desktop and 390px mobile layout checks found no page overflow or clipped
   controls; environment/shell switching and copy feedback work with no browser
   console errors.
@@ -166,6 +170,23 @@ local storage backend; live R2 verification needs credentials (DECISIONS 026).
 
 ---
 
+## Phase 6.8 verification
+
+- `npm run --silent onboarding:report` emits machine-readable JSON derived by
+  Prisma from the earliest user creation and earliest succeeded job per
+  workspace. No schema or duplicate timing state was added.
+- Each row contains only workspace ID, timestamps, elapsed seconds, and target
+  result. The report excludes emails, names, job inputs, and credentials.
+- Failed jobs do not count, later successful jobs cannot replace the first,
+  multi-user workspaces start at the earliest signup, and exactly 60.000s does
+  not satisfy the strict "under 60" target.
+- `tests/onboarding-report.test.js` covers the derivation and the user-facing
+  command. The full suite passes 81/81.
+- The current dev workspace reports 35.298s. This proves instrumentation but is
+  deliberately not presented as the required unassisted real-person result.
+
+---
+
 ## How to run & verify (Windows dev box)
 
 ```bash
@@ -174,7 +195,8 @@ docker compose up -d              # Postgres on localhost:5433
 npx prisma migrate dev            # apply migrations
 npm run seed                      # dev workspace + API key (printed once) + models
 docker build -t nodera/llm-worker workers/llm-worker
-npm test                          # 79 tests (boots the app itself; needs Docker)
+npm test                          # 81 tests (boots the app itself; needs Docker)
+npm run --silent onboarding:report # signup→first-success metrics (JSON)
 npm run smoke                     # real end-to-end (needs Ollama + llama3.1:8b)
 npm run dev:all                   # web(:3000) + dispatcher(:3001) + one agent
 ```
