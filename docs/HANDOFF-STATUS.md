@@ -12,12 +12,13 @@ checkbox list is `docs/TASKS.md`; this doc adds the context, gotchas, and
 ## TL;DR
 
 - **Phases 0–5 are complete and their gates pass.** Phase 6 is in progress.
-- **75 integration tests pass** (`npm test`), plus `npm run smoke` (real
+- **79 integration tests pass** (`npm test`), plus `npm run smoke` (real
   end-to-end AI), `npm run test:multi` (multi-provider drain).
 - The system runs a **real** job end to end: customer API → dispatcher →
   provider agent → hardened Docker worker → local Ollama (`llama3.1:8b` on GPU)
   → metered result → webhook. Verified live.
-- Everything is committed through **Phase 6.6**.
+- Everything buildable is committed through **Phase 6.7**; its external
+  production acceptance test remains owner-blocked.
 - **Phase 6.3 (playground) is implemented and verified** with a live LLM run,
   both model request paths, desktop/mobile checks, and browser console review.
 - **Phase 6.4 (account + keys) is implemented and verified:** session-only key
@@ -29,6 +30,9 @@ checkbox list is `docs/TASKS.md`; this doc adds the context, gotchas, and
 - **Phase 6.6 (public docs) is implemented and verified:** `/docs` publishes
   the quickstart, every v1 endpoint, error guidance, and exact webhook
   verification code with local/production and Bash/PowerShell variants.
+- **Phase 6.7 (production deploy) is packaged and locally verified:** separate
+  production images, private Postgres, automatic migrations, health gates,
+  fail-fast env validation, and container hardening are ready for a host.
 - Several tasks are **`[~]` blocked on human-only resources** (R2 creds,
   Google OAuth creds, a ≥12 GB GPU, a VPS/domain, live stopwatch tests). Each
   has exact instructions in `docs/LAUNCH-CHECKLIST.md`.
@@ -51,6 +55,7 @@ checkbox list is `docs/TASKS.md`; this doc adds the context, gotchas, and
 | 6.4 Account + keys | ✅ | session-only view/create/revoke, reveal-once plaintext, recent jobs through `/v1`, immediate revocation |
 | 6.5 Abuse limits | ✅ | atomic Postgres fixed windows, 60 requests/minute, 64 KiB job-body cap, model prompt caps |
 | 6.6 Public docs | ✅ | responsive `/docs`, executable quickstart, all customer/provider endpoints, webhook verification |
+| 6.7 Production deploy | `[~]` | deploy package verified locally; VPS/domain/TLS/live credentials and external job remain owner-blocked |
 
 \* Gate 4 passed with a documented exception: everything is proven on the
 local storage backend; live R2 verification needs credentials (DECISIONS 026).
@@ -113,7 +118,7 @@ local storage backend; live R2 verification needs credentials (DECISIONS 026).
   `Content-Length` is absent. Oversized bodies never create queue rows.
 - `tests/rate-limits.test.js` concurrently hammers API-key and session callers,
   proves exact accepted counts and credential isolation, and confirms every
-  accepted row remains a valid queued job. All 75 integration tests pass.
+  accepted row remains a valid queued job. All 79 integration tests pass.
 
 ---
 
@@ -132,10 +137,32 @@ local storage backend; live R2 verification needs credentials (DECISIONS 026).
   contract and remains an explicit follow-up rather than an invented endpoint.
 - `tests/public-docs.test.js` provisions a fresh workspace and API key, executes
   the published quickstart payload through real `curl`, and retrieves the
-  resulting queued job. The complete suite passes 75/75.
+  resulting queued job. The complete suite passes 79/79.
 - Desktop and 390px mobile layout checks found no page overflow or clipped
   controls; environment/shell switching and copy feedback work with no browser
   console errors.
+
+---
+
+## Phase 6.7 verification
+
+- `deploy/Dockerfile` produces separate standalone web, dispatcher, and
+  one-shot migration targets. Runtime services use the slim Node base and do
+  not carry Prisma CLI or front-end build dependencies unnecessarily.
+- `deploy/compose.yml` keeps Postgres private, runs migrations before either
+  service starts, gates both services on health, binds web to loopback for a
+  future TLS reverse proxy, rotates logs, runs as `node`, drops all Linux
+  capabilities, and enables `no-new-privileges`.
+- Production startup rejects HTTP app origins, dev-login, local storage,
+  missing/placeholder secrets, malformed database URLs, and non-HTTPS R2
+  endpoints before serving traffic. Test credentials are generated at runtime.
+- Local production validation used a fresh isolated volume: Postgres became
+  healthy, all three migrations applied, web and dispatcher started, and
+  `/healthz` plus `/docs` returned 200. The validation stack and volume were
+  removed afterward without touching dev data.
+- `tests/production-deploy.test.js` covers the environment contract and renders
+  the Compose topology. The external acceptance job remains blocked only on
+  owner-supplied infrastructure and credentials.
 
 ---
 
@@ -147,7 +174,7 @@ docker compose up -d              # Postgres on localhost:5433
 npx prisma migrate dev            # apply migrations
 npm run seed                      # dev workspace + API key (printed once) + models
 docker build -t nodera/llm-worker workers/llm-worker
-npm test                          # 75 tests (boots the app itself; needs Docker)
+npm test                          # 79 tests (boots the app itself; needs Docker)
 npm run smoke                     # real end-to-end (needs Ollama + llama3.1:8b)
 npm run dev:all                   # web(:3000) + dispatcher(:3001) + one agent
 ```
@@ -237,7 +264,7 @@ Full command list and reset steps: `docs/RUNBOOK.md`.
 | 4.2 | R2 live | `R2_ACCESS_KEY_ID` + `R2_SECRET_ACCESS_KEY` (endpoint/account/bucket already set) | `npm run smoke:r2` |
 | 6.1 | Live SDXL | ≥12 GB GPU + NVIDIA Container Toolkit; `docker build` image-worker | submit an `sdxl-1.0` job |
 | 6.2 | Live Google | `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` + `SESSION_SECRET` | `/api/auth/google/start` |
-| 6.7 | Prod deploy | VPS + domain + TLS (host web+dispatcher+Postgres, R2 live) | external job succeeds |
+| 6.7 | Prod deploy | VPS + domain + TLS + R2/OAuth credentials; deploy bundle is ready | external job succeeds |
 | 6.8 / 8.9 | Stopwatch | a real person timed | <60 s customer / <5 min provider |
 
 **R2 note:** the owner provided the bucket URL

@@ -65,4 +65,44 @@ cleaned per run; artifacts live under `STORAGE_ROOT` (default `storage/`).
 - `MAX_JOB_REQUEST_BYTES` — hard cap for the complete job JSON body (default
   65,536 bytes; model prompt limits may be lower)
 
-(Deploy, backup/restore, and triage sections arrive with task 9.10.)
+## Production deployment
+
+The production bundle is vendor-neutral and expects one Linux host with Docker
+Engine + Compose v2. Postgres is private; only the web service binds to the host
+loopback interface so a host reverse proxy can terminate TLS later.
+
+1. Create the untracked production environment file:
+   ```bash
+   cp deploy/.env.example deploy/.env
+   ```
+2. Replace every placeholder. Generate `POSTGRES_PASSWORD`, `SESSION_SECRET`,
+   and `PROVIDER_ENROLL_SECRET` independently as random hex so the database
+   password can be copied into `DATABASE_URL` without URL escaping:
+   ```bash
+   node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
+   ```
+3. Validate and build without starting traffic:
+   ```bash
+   docker compose --env-file deploy/.env -f deploy/compose.yml config --quiet
+   docker compose --env-file deploy/.env -f deploy/compose.yml build
+   ```
+4. Start the stack. Compose waits for Postgres, runs every committed migration
+   once, then starts web and dispatcher:
+   ```bash
+   docker compose --env-file deploy/.env -f deploy/compose.yml up -d
+   docker compose --env-file deploy/.env -f deploy/compose.yml ps
+   curl http://127.0.0.1:3000/healthz
+   ```
+5. Inspect bounded service logs without printing the environment:
+   ```bash
+   docker compose --env-file deploy/.env -f deploy/compose.yml logs --tail=200 web dispatcher migrate
+   ```
+
+For an update, pull the intended commit, rerun `build`, then `up -d`; the
+migration gate runs before replacement services start. `down` preserves the
+database volume. **Never run `down -v` in production** because it deletes the
+Postgres volume. Backup/restore, rollback, and incident triage drills remain in
+task 9.10.
+
+The host/domain/TLS, real R2 and Google credentials, and external acceptance
+job are intentionally deferred to `docs/LAUNCH-CHECKLIST.md` §4.

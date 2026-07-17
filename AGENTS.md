@@ -63,3 +63,6 @@ Never say "job" when you mean "run." Retries create new runs, never new jobs.
 - `npm run seed` — dev workspace, API key, menu models
 - `npm run smoke` — full job lifecycle check (must pass before every commit)
 - `npm test` — integration tests
+- `npm run migrate:deploy` — apply committed migrations in production
+- `npm run start:production:web` — validate production config and start the control plane
+- `npm run start:production:dispatcher` — validate production config and start the dispatcher

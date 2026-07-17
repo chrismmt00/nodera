@@ -33,6 +33,7 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example
+!deploy/.env.example
 
 # local runtime state (may contain provider credentials or job contents)
 .nodera-agent.json

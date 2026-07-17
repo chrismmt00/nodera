@@ -68,3 +68,26 @@ non-production only) exercises the same provisioning + session code today.
    ```
 4. Verify: open `<APP_URL>/api/auth/google/start`, sign in, and you land in
    `/playground` with a workspace + API key already created.
+
+## 4. External production launch (task 6.7)
+
+The production images, Compose topology, migrations, health gates, and secure
+environment validation are implemented and locally verified. The remaining
+steps require owner-controlled infrastructure and credentials:
+
+1. Provision a Linux host with Docker Engine and Compose v2. Point the chosen
+   domain at it, but do not expose Postgres or the dispatcher health port.
+2. Copy `deploy/.env.example` to `deploy/.env` on the host and replace every
+   placeholder. Use the R2 credentials from §1 and Google OAuth credentials
+   from §3. Set `APP_URL` to the final HTTPS origin and register its callback:
+   `<APP_URL>/api/auth/google/callback`.
+3. Follow `docs/RUNBOOK.md` → **Production deployment** to validate, build,
+   migrate, and start the stack.
+4. Configure a TLS reverse proxy from the public origin to
+   `http://127.0.0.1:3000`. Confirm the public `/healthz` and `/docs` return 200.
+5. Configure an internet-connected provider with
+   `API_BASE_URL=<APP_URL>/api/v1`, approve it, and confirm its heartbeat and
+   polling remain healthy from outside the host network.
+6. Create a fresh external customer key, submit a real job using only `/docs`,
+   and verify it reaches `succeeded` with downloadable output. This final run
+   is the Phase 6.7 acceptance test.

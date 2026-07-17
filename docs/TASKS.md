@@ -73,7 +73,7 @@ One task = one AI session = one commit. Do them in order. Check the box only whe
 - [x] **6.4 Keys + account page.** View/create/revoke keys, recent jobs. ✓ when: revoked key → 401 immediately.
 - [x] **6.5 Rate limits + input limits.** Per-key limits, 429 + Retry-After, max prompt bytes enforced at POST /v1/jobs. ✓ when: hammering script gets throttled; queue unharmed.
 - [x] **6.6 Public docs.** Quickstart + per-endpoint examples + webhook verification, published. ✓ when: a fresh key completes the quickstart verbatim.
-- [ ] **6.7 Production deploy.** Control plane + dispatcher + Postgres hosted, R2 live, domain + TLS, providers connect over the internet. ✓ when: full job succeeds in production from an external customer key.
+- [~] **6.7 Production deploy.** Control plane + dispatcher + Postgres hosted, R2 live, domain + TLS, providers connect over the internet. ✓ when: full job succeeds in production from an external customer key. *(Buildable deployment package is complete and locally verified: production images, Compose topology, migrations, health gates, security baseline, env validation, and runbook. External VPS/domain/TLS/R2/OAuth credentials and the external job remain owner-supplied; see docs/LAUNCH-CHECKLIST.md §4.)*
 - [ ] **6.8 Stopwatch.** Record signup→first-succeeded-job per workspace; test the 60s target with a real person. ✓ when: measured under 60s.
 
 **GATE 6:** Scope success criteria 1, 2 pass; throttling holds.

@@ -15,18 +15,22 @@ plan, the gotchas, and where the code goes.
 
 ## Phase 6 — remainder (public readiness)
 
-Phase 6.6 is implemented: `/docs` publishes executable local/production
-examples for every v1 endpoint and webhook verification. Live SDXL rendering
-remains grouped with the Phase 6.1 hardware block. The next task is 6.7.
+Phase 6.7's buildable deployment package is implemented and verified locally.
+Live SDXL rendering remains grouped with the Phase 6.1 hardware block. Phase
+6.7 remains `[~]` until the owner supplies the external infrastructure; the
+next buildable task is 6.8.
 
 ### 6.7 Production deploy — **[~] blocked-on-human**
-- Host control plane + dispatcher + Postgres; R2 live; real domain + TLS;
-  providers connect over the internet. Needs a VPS, domain, TLS — owner action.
-- Buildable now: `npm run build` production config, a `migrate:deploy` path
-  (already scripted in `packages/db`), env templates, a compose/systemd or
-  Dockerfile for web+dispatcher, health checks (already exist). Write the deploy
-  runbook section (RUNBOOK 9.10 also covers this). Record steps in
-  LAUNCH-CHECKLIST.
+- Complete in repo: fail-fast production env validation; standalone web,
+  dispatcher, and one-shot migration images; private Postgres; migration and
+  health gates; non-root/capability-dropped services; bounded logs; production
+  env template; deployment runbook and automated Compose validation.
+- Verified locally: clean Postgres volume → all migrations → healthy web and
+  dispatcher; `/docs` returned 200. The production stack uses an isolated
+  Compose project and never shares the dev database volume.
+- Still external: VPS, domain/TLS reverse proxy, live R2 and OAuth credentials,
+  internet-connected provider, and the acceptance job from an external key.
+  Exact owner steps are in `docs/LAUNCH-CHECKLIST.md` §4.
 
 ### 6.8 Stopwatch — **[~] blocked-on-human**
 - Record signup→first-succeeded-job per workspace; test the 60 s target with a

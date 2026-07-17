@@ -1,0 +1,130 @@
+name: nodera-production
+
+x-service-security: &service-security
+  init: true
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  tmpfs:
+    - /tmp
+
+x-logging: &service-logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
+x-build: &service-build
+  context: ..
+  dockerfile: deploy/Dockerfile
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nodera
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env}
+      POSTGRES_DB: nodera
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nodera -d nodera"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    logging: *service-logging
+
+  migrate:
+    <<: *service-security
+    image: nodera-migrate:local
+    build:
+      <<: *service-build
+      target: migrate
+    restart: "no"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL in deploy/.env}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging: *service-logging
+
+  web:
+    <<: *service-security
+    image: nodera-web:local
+    build:
+      <<: *service-build
+      target: web
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      APP_URL: ${APP_URL:?set APP_URL in deploy/.env}
+      DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL in deploy/.env}
+      ALLOW_DEV_LOGIN: "0"
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in deploy/.env}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?set GOOGLE_CLIENT_ID in deploy/.env}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?set GOOGLE_CLIENT_SECRET in deploy/.env}
+      PROVIDER_ENROLL_SECRET: ${PROVIDER_ENROLL_SECRET:?set PROVIDER_ENROLL_SECRET in deploy/.env}
+      JOB_MAX_ATTEMPTS: ${JOB_MAX_ATTEMPTS:-3}
+      RATE_LIMIT_JOBS_PER_MIN: ${RATE_LIMIT_JOBS_PER_MIN:-60}
+      MAX_JOB_REQUEST_BYTES: ${MAX_JOB_REQUEST_BYTES:-65536}
+      INLINE_ARTIFACT_MAX_BYTES: ${INLINE_ARTIFACT_MAX_BYTES:-262144}
+      MAX_ARTIFACTS_PER_RUN: ${MAX_ARTIFACTS_PER_RUN:-10}
+      MAX_ARTIFACT_TOTAL_BYTES: ${MAX_ARTIFACT_TOTAL_BYTES:-52428800}
+      STORAGE_BACKEND: r2
+      R2_ACCOUNT_ID: ${R2_ACCOUNT_ID:?set R2_ACCOUNT_ID in deploy/.env}
+      R2_BUCKET: ${R2_BUCKET:?set R2_BUCKET in deploy/.env}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:?set R2_ACCESS_KEY_ID in deploy/.env}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:?set R2_SECRET_ACCESS_KEY in deploy/.env}
+      R2_ENDPOINT: ${R2_ENDPOINT:?set R2_ENDPOINT in deploy/.env}
+      R2_REGION: ${R2_REGION:-auto}
+      R2_UPLOAD_URL_TTL_S: ${R2_UPLOAD_URL_TTL_S:-300}
+    ports:
+      - "${WEB_BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/healthz').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    logging: *service-logging
+
+  dispatcher:
+    <<: *service-security
+    image: nodera-dispatcher:local
+    build:
+      <<: *service-build
+      target: dispatcher
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL in deploy/.env}
+      DISPATCHER_PORT: "3001"
+      DISPATCH_INTERVAL_MS: ${DISPATCH_INTERVAL_MS:-1000}
+      PROVIDER_OFFLINE_AFTER_MS: ${PROVIDER_OFFLINE_AFTER_MS:-120000}
+      JOB_MAX_ATTEMPTS: ${JOB_MAX_ATTEMPTS:-3}
+      WEBHOOK_MAX_ATTEMPTS: ${WEBHOOK_MAX_ATTEMPTS:-5}
+      WEBHOOK_BACKOFF_S: ${WEBHOOK_BACKOFF_S:-60,300,900,3600,21600}
+      WEBHOOK_TIMEOUT_MS: ${WEBHOOK_TIMEOUT_MS:-10000}
+      WEBHOOK_BATCH_SIZE: ${WEBHOOK_BATCH_SIZE:-10}
+      WEBHOOK_ALLOW_PRIVATE: "0"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/healthz').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    logging: *service-logging
+
+volumes:
+  postgres_data:
