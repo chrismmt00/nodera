@@ -8,6 +8,7 @@ export function ProductShell({ children, email, onSignOut, showNavigation = fals
   const pathname = usePathname();
   const links = [
     { href: "/models", label: "Models" },
+    { href: "/jobs", label: "Jobs" },
     { href: "/playground", label: "Playground" },
     { href: "/account", label: "Account" },
     { href: "/docs", label: "Docs" },

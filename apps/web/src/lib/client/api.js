@@ -30,7 +30,7 @@ export const api = {
   models: () => call("/models"),
   createJob: (body, options = {}) => call("/jobs", { ...options, method: "POST", body }),
   job: (id, options = {}) => call(`/jobs/${id}`, options),
-  jobs: (params = "") => call(`/jobs${params}`),
+  jobs: (params = "", options = {}) => call(`/jobs${params}`, options),
 };
 
 async function authCall(path, options = {}) {

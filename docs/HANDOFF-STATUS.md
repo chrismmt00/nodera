@@ -12,7 +12,7 @@ checkbox list is `docs/TASKS.md`; this doc adds the context, gotchas, and
 ## TL;DR
 
 - **Phases 0–5 are complete and their gates pass.** Phase 7 is in progress.
-- **82 integration tests pass** (`npm test`), plus `npm run smoke` (real
+- **83 integration tests pass** (`npm test`), plus `npm run smoke` (real
   end-to-end AI), `npm run test:multi` (multi-provider drain).
 - The system runs a **real** job end to end: customer API → dispatcher →
   provider agent → hardened Docker worker → local Ollama (`llama3.1:8b` on GPU)
@@ -40,6 +40,9 @@ checkbox list is `docs/TASKS.md`; this doc adds the context, gotchas, and
   API-driven model cards and uses the same generated composer as the playground;
   adding an active DB model is covered by integration test with no frontend
   code change.
+- **Phase 7.2 (jobs dashboard) is implemented and verified:** `/jobs` polls the
+  public jobs list, shows newest-first activity with human-readable statuses,
+  and reuses the same compact component on the account page.
 - Several tasks are **`[~]` blocked on human-only resources** (R2 creds,
   Google OAuth creds, a ≥12 GB GPU, a VPS/domain, live stopwatch tests). Each
   has exact instructions in `docs/LAUNCH-CHECKLIST.md`.
@@ -65,6 +68,7 @@ checkbox list is `docs/TASKS.md`; this doc adds the context, gotchas, and
 | 6.7 Production deploy | `[~]` | deploy package verified locally; VPS/domain/TLS/live credentials and external job remain owner-blocked |
 | 6.8 Customer stopwatch | `[~]` | measurement/report tested; dev row 35.298s; unassisted real-person run remains owner-blocked |
 | 7.1 Model gallery | ✅ | `/models` cards + shared generated composer from `GET /v1/models`; DB-added model integration test |
+| 7.2 Jobs dashboard | ✅ | `/jobs` newest-first polling list, human statuses, responsive summary, account recent-jobs reuse |
 
 \* Gate 4 passed with a documented exception: everything is proven on the
 local storage backend; live R2 verification needs credentials (DECISIONS 026).
@@ -127,7 +131,7 @@ local storage backend; live R2 verification needs credentials (DECISIONS 026).
   `Content-Length` is absent. Oversized bodies never create queue rows.
 - `tests/rate-limits.test.js` concurrently hammers API-key and session callers,
   proves exact accepted counts and credential isolation, and confirms every
-  accepted row remains a valid queued job. All 82 integration tests pass.
+  accepted row remains a valid queued job. All 83 integration tests pass.
 
 ---
 
@@ -146,7 +150,7 @@ local storage backend; live R2 verification needs credentials (DECISIONS 026).
   contract and remains an explicit follow-up rather than an invented endpoint.
 - `tests/public-docs.test.js` provisions a fresh workspace and API key, executes
   the published quickstart payload through real `curl`, and retrieves the
-  resulting queued job. The complete suite passes 82/82.
+  resulting queued job. The complete suite passes 83/83.
 - Desktop and 390px mobile layout checks found no page overflow or clipped
   controls; environment/shell switching and copy feedback work with no browser
   console errors.
@@ -186,7 +190,7 @@ local storage backend; live R2 verification needs credentials (DECISIONS 026).
   multi-user workspaces start at the earliest signup, and exactly 60.000s does
   not satisfy the strict "under 60" target.
 - `tests/onboarding-report.test.js` covers the derivation and the user-facing
-  command. The full suite passes 82/82.
+  command. The full suite passes 83/83.
 - The current dev workspace reports 35.298s. This proves instrumentation but is
   deliberately not presented as the required unassisted real-person result.
 
@@ -212,6 +216,25 @@ local storage backend; live R2 verification needs credentials (DECISIONS 026).
 
 ---
 
+## Phase 7.2 verification
+
+- `/jobs` is a real signed-in route in the shared product shell with loading,
+  sign-in, error, empty, desktop, and mobile states.
+- The page loads and polls session-authenticated `GET /v1/jobs?limit=20`; it
+  does not use a dashboard-only API route or Prisma from the browser.
+- Rows render newest-first with human-readable status text from `humanStatus()`,
+  live status dots for `queued | assigned | running`, created/finalized times,
+  and no raw status enum shown alone.
+- `JobsDashboard` is reusable: the account page now uses the same component in
+  compact mode for recent jobs.
+- `tests/jobs-dashboard.test.js` creates jobs through `/v1/jobs`, proves the
+  newest-first order, updates a job status in Prisma, and proves a later public
+  jobs poll observes the changed status.
+- Browser checks on desktop and 390px mobile found no horizontal overflow; the
+  summary cards and job rows collapse cleanly on mobile.
+
+---
+
 ## How to run & verify (Windows dev box)
 
 ```bash
@@ -220,7 +243,7 @@ docker compose up -d              # Postgres on localhost:5433
 npx prisma migrate dev            # apply migrations
 npm run seed                      # dev workspace + API key (printed once) + models
 docker build -t nodera/llm-worker workers/llm-worker
-npm test                          # 82 tests (boots the app itself; needs Docker)
+npm test                          # 83 tests (boots the app itself; needs Docker)
 npm run --silent onboarding:report # signup→first-success metrics (JSON)
 npm run smoke                     # real end-to-end (needs Ollama + llama3.1:8b)
 npm run dev:all                   # web(:3000) + dispatcher(:3001) + one agent

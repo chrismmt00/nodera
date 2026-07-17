@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { JobsDashboard } from "@/components/jobs-dashboard.js";
 import { ProductShell, PageState } from "@/components/product-shell.js";
 import { SignInCard } from "@/components/sign-in-card.js";
-import { Button, C, El, Panel, StatusDot, humanStatus } from "@/components/ui.js";
+import { Button, C, El, Panel, StatusDot } from "@/components/ui.js";
 import { account, api, logout, whoAmI } from "@/lib/client/api.js";
 
 export default function AccountPage() {
@@ -57,7 +58,7 @@ export default function AccountPage() {
       </div>
       <div className="nodera-account-layout">
         <ApiKeysPanel initialKeys={view.keys} />
-        <RecentJobs jobs={view.jobs} />
+        <JobsDashboard initialJobs={view.jobs} compact limit={5} />
       </div>
     </ProductShell>
   );
@@ -186,41 +187,6 @@ function ApiKeysPanel({ initialKeys }) {
       </div>
     </Panel>
   );
-}
-
-function RecentJobs({ jobs }) {
-  return (
-    <Panel s="overflow:hidden">
-      <div className="nodera-section-heading">
-        <div>
-          <El s="font-size:15px;font-weight:700">Recent jobs</El>
-          <El s={`font-size:12px;color:${C.dim};margin-top:3px`}>Newest activity from the public jobs API.</El>
-        </div>
-      </div>
-      {jobs.length === 0 ? (
-        <El s={`color:${C.dim};font-size:13px;padding:18px`}>No jobs yet. Your first playground run will appear here.</El>
-      ) : (
-        <div className="nodera-recent-jobs">
-          {jobs.map((job) => (
-            <div className="nodera-job-row" key={job.job_id}>
-              <El s="display:flex;align-items:center;gap:8px;font-size:12px">
-                <StatusDot color={statusColor(job.status)} pulse={!job.finalized_at} />
-                {humanStatus(job.status)}
-              </El>
-              <El s={`font-size:12px;color:${C.text}`}>{job.model}</El>
-              <El s={`font-size:11px;color:${C.dim};text-align:right`}>{formatDate(job.created_at)}</El>
-            </div>
-          ))}
-        </div>
-      )}
-    </Panel>
-  );
-}
-
-function statusColor(status) {
-  if (status === "succeeded") return C.green;
-  if (status === "failed" || status === "canceled") return C.red;
-  return C.accent;
 }
 
 function formatDate(value) {

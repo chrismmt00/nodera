@@ -18,7 +18,7 @@ plan, the gotchas, and where the code goes.
 All buildable Phase 6 work is implemented. Live SDXL remains grouped with the
 Phase 6.1 hardware block; 6.7 awaits external infrastructure, and 6.8 awaits an
 unassisted real-person stopwatch. Phase 7 is underway; the next buildable task
-is 7.2.
+is 7.3.
 
 ### 6.7 Production deploy — **[~] blocked-on-human**
 - Complete in repo: fail-fast production env validation; standalone web,
@@ -65,8 +65,12 @@ error states and must work on mobile; never show a raw enum alone
   `GET /v1/models` params; `tests/model-gallery.test.js` inserts a temporary
   DB model and proves it appears, generates fields, and creates a job with zero
   frontend code changes.
-- **7.2 Jobs dashboard** — live statuses (human-readable), newest first, updates
-  without manual refresh (poll `GET /v1/jobs`).
+- **7.2 Jobs dashboard — done.** `/jobs` shows newest-first workspace jobs,
+  human-readable live/final statuses, summary counts, empty/error states, and a
+  2-second poll of session-authenticated `GET /v1/jobs`. The account page
+  reuses the same compact dashboard component for recent jobs. Coverage creates
+  jobs through `/v1`, changes a status in Prisma, and proves a later poll sees
+  the update.
 - **7.3 Job detail** — input shown, output rendered (image as image, text as
   text), artifact downloads, plain-language error + Retry (re-submit same input
   as a new job), re-run. Cover succeeded and failed for both modalities.

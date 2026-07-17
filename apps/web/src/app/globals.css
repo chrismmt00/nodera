@@ -358,7 +358,8 @@ select {
   font-size: 12px;
 }
 .nodera-key-list,
-.nodera-recent-jobs {
+.nodera-recent-jobs,
+.nodera-jobs-list {
   display: grid;
 }
 .nodera-key-row,
@@ -383,6 +384,25 @@ select {
 }
 .nodera-job-row {
   grid-template-columns: minmax(200px, 1fr) minmax(130px, 1fr) auto;
+}
+.nodera-job-row.is-dashboard {
+  grid-template-columns: minmax(260px, 1.2fr) minmax(160px, 0.8fr) minmax(160px, auto);
+}
+.nodera-jobs-dashboard {
+  display: grid;
+  gap: 16px;
+}
+.nodera-job-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.nodera-jobs-refresh-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #8b93a7;
+  font-size: 11px;
 }
 .nodera-docs-header {
   display: grid;
@@ -711,8 +731,14 @@ select {
   .nodera-key-form > div,
   .nodera-key-reveal,
   .nodera-key-row,
-  .nodera-job-row {
+  .nodera-job-row,
+  .nodera-job-row.is-dashboard,
+  .nodera-job-summary-grid {
     grid-template-columns: 1fr;
+  }
+  .nodera-jobs-refresh-state {
+    align-items: stretch;
+    flex-direction: column;
   }
   .nodera-key-action {
     justify-content: flex-start;

@@ -81,7 +81,7 @@ One task = one AI session = one commit. Do them in order. Check the box only whe
 ## Phase 7 — Customer front end
 
 - [x] **7.1 Model gallery.** Plain-language cards, form generated from GET /v1/models params. ✓ when: adding a menu model in DB adds a working gallery page with zero code changes.
-- [ ] **7.2 Jobs dashboard.** Live statuses (human-readable), newest first. ✓ when: status changes appear without manual refresh.
+- [x] **7.2 Jobs dashboard.** Live statuses (human-readable), newest first. ✓ when: status changes appear without manual refresh.
 - [ ] **7.3 Job detail.** Input, rendered output (image as image, text as text), artifact downloads, plain-language error + Retry, re-run. ✓ when: covers succeeded and failed jobs for both modalities.
 - [ ] **7.4 Snippet generator.** Any UI run → working curl + Node snippets reproducing it. ✓ when: pasted snippet runs successfully against production.
 - [ ] **7.5 Usage page.** Jobs, tokens, images, compute time from metering. ✓ when: numbers reconcile with run rows.
