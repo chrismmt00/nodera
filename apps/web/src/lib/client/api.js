@@ -37,10 +37,25 @@ async function authCall(path, options = {}) {
   const res = await fetch(path, { credentials: "same-origin", ...options });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data?.error?.message || `Request failed (${res.status})`);
+    const err = new Error(data?.error?.message || `Request failed (${res.status})`);
+    err.code = data?.error?.code || "internal";
+    err.status = res.status;
+    throw err;
   }
   return data;
 }
+
+export const account = {
+  keys: () => authCall("/api/account/keys"),
+  createKey: (label) =>
+    authCall("/api/account/keys", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ label }),
+    }),
+  revokeKey: (id) =>
+    authCall(`/api/account/keys/${encodeURIComponent(id)}`, { method: "DELETE" }),
+};
 
 export async function whoAmI() {
   return authCall("/api/auth/me");

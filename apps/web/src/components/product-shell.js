@@ -1,9 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Button, C, El, css } from "@/components/ui.js";
+import { usePathname } from "next/navigation";
+import { Button, C, El } from "@/components/ui.js";
 
 export function ProductShell({ children, email, onSignOut }) {
+  const pathname = usePathname();
+  const links = [
+    { href: "/playground", label: "Playground" },
+    { href: "/account", label: "Account" },
+  ];
   return (
     <div className="nodera-shell">
       <header className="nodera-topbar">
@@ -12,7 +18,15 @@ export function ProductShell({ children, email, onSignOut }) {
         </Link>
         {email ? (
           <nav aria-label="Customer navigation" className="nodera-nav-links">
-            <Link href="/playground" aria-current="page">Playground</Link>
+            {links.map((link) => (
+              <Link
+                href={link.href}
+                aria-current={pathname === link.href ? "page" : undefined}
+                key={link.href}
+              >
+                {link.label}
+              </Link>
+            ))}
           </nav>
         ) : null}
         <El s="flex:1" />

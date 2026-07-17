@@ -64,7 +64,7 @@ export function Button({ children, busy = false, variant = "primary", style, ...
     `border-radius:9px;padding:9px 18px;font:inherit;font-size:13px;font-weight:600;` +
       `border:1px solid ${primary ? C.accent : C.border};` +
       `background:${primary ? C.accent : C.panel2};` +
-      `color:${primary ? "#06121a" : C.text};cursor:${busy ? "wait" : "pointer"};` +
+      `color:${primary ? "#06121a" : C.text};cursor:${busy ? "wait" : "pointer"};white-space:nowrap;` +
       `opacity:${busy ? ".65" : "1"}`
   );
   return (

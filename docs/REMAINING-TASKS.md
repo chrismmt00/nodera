@@ -1,6 +1,6 @@
 # Nodera — Remaining Work (leftover phases)
 
-_Handoff companion to `docs/HANDOFF-STATUS.md`. Written 2026-07-16._
+_Handoff companion to `docs/HANDOFF-STATUS.md`. Updated 2026-07-17._
 
 Everything left to reach v1 "production-ready" (Gate 8 + Gate 9). Work in
 order, one task per commit, tests + `npm run smoke` green before each commit,
@@ -15,22 +15,9 @@ plan, the gotchas, and where the code goes.
 
 ## Phase 6 — remainder (public readiness)
 
-Phase 6.3 is implemented, tested, and verified with a real LLM browser run.
-Live SDXL rendering remains grouped with the Phase 6.1 hardware block. The next
-buildable task is 6.4.
-
-### 6.4 Keys + account page
-- Page (e.g. `/account` or `/keys`) to **view / create / revoke** API keys and
-  show recent jobs, all via the session.
-- **Contract gap to resolve:** `docs/api.md` has no key-management endpoints,
-  and keys are stored hashed. Options, in order of preference:
-  (a) add **session-only** dashboard routes under `/api/account/*` that manage
-  keys for the signed-in workspace (NOT under `/v1`, so the public contract is
-  untouched) — this is the "session-authed wrapper" pattern already used, and
-  is the cleanest; document it in DECISIONS. Create returns the plaintext
-  **once**; list shows masked + created/revoked; revoke sets `revoked_at`.
-- Acceptance: a revoked key returns **401 immediately** on `/v1` (already true —
-  `requireApiKey` checks `revokedAt`). Write a test.
+Phase 6.4 is implemented, tested, and browser-verified. Live SDXL rendering
+remains grouped with the Phase 6.1 hardware block. The next buildable task is
+6.5.
 
 ### 6.5 Rate limits + input limits  ← highest-value, fully buildable now
 - Per-key (and per-session-workspace) rate limiting on `POST /v1/jobs`: return
@@ -210,14 +197,11 @@ remaining `[~]` item has exact LAUNCH-CHECKLIST instructions. **Gate 8 + Gate 9
 
 ## Known open threads to resolve along the way
 
-1. **Hashed-key vs. one-click snippet (7.4):** the auto-provisioned key's
-   plaintext isn't persisted. Decide: reveal-once on the keys page (6.4),
-   session-scoped stash, or snippet-uses-env-var. Record in DECISIONS.
-2. **Rate-limit store (6.5/9.6):** in-process Map for single instance;
+1. **Rate-limit store (6.5/9.6):** in-process Map for single instance;
    Postgres-backed for multi-instance/production. Decide before 6.7.
-3. **Windows provider path (blueprint §11 flag):** Docker Desktop is friction
+2. **Windows provider path (blueprint §11 flag):** Docker Desktop is friction
    for non-technical providers; a native (bundled-Ollama) path may be needed
    for the consumer app. Not v1-blocking; don't forget.
-4. **`docs/TASKS.md` line 24** still says Phase 1 smoke "may assign directly in
+3. **`docs/TASKS.md` line 24** still says Phase 1 smoke "may assign directly in
    DB" — smoke was upgraded to the real dispatcher+agent in 2.2/3.5; the note is
    stale but harmless.

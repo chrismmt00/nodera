@@ -1,6 +1,6 @@
 # Nodera — Handoff Status (what's been built)
 
-_Snapshot for the next engineer/AI picking this up. Written 2026-07-16._
+_Snapshot for the next engineer/AI picking this up. Updated 2026-07-17._
 
 This is the ground truth of where the build stands. The authoritative
 checkbox list is `docs/TASKS.md`; this doc adds the context, gotchas, and
@@ -12,14 +12,17 @@ checkbox list is `docs/TASKS.md`; this doc adds the context, gotchas, and
 ## TL;DR
 
 - **Phases 0–5 are complete and their gates pass.** Phase 6 is in progress.
-- **67 integration tests pass** (`npm test`), plus `npm run smoke` (real
+- **70 integration tests pass** (`npm test`), plus `npm run smoke` (real
   end-to-end AI), `npm run test:multi` (multi-provider drain).
 - The system runs a **real** job end to end: customer API → dispatcher →
   provider agent → hardened Docker worker → local Ollama (`llama3.1:8b` on GPU)
   → metered result → webhook. Verified live.
-- Everything is committed through **Phase 6.3**.
+- Everything is committed through **Phase 6.4**.
 - **Phase 6.3 (playground) is implemented and verified** with a live LLM run,
   both model request paths, desktop/mobile checks, and browser console review.
+- **Phase 6.4 (account + keys) is implemented and verified:** session-only key
+  management, recent jobs through `/v1`, reveal-once creation, and immediate
+  revocation are covered by integration and browser checks.
 - Several tasks are **`[~]` blocked on human-only resources** (R2 creds,
   Google OAuth creds, a ≥12 GB GPU, a VPS/domain, live stopwatch tests). Each
   has exact instructions in `docs/LAUNCH-CHECKLIST.md`.
@@ -39,6 +42,7 @@ checkbox list is `docs/TASKS.md`; this doc adds the context, gotchas, and
 | 6.1 Image worker | `[~]` | SDXL/Diffusers worker + Dockerfile built; **live run blocked on ≥12 GB GPU** |
 | 6.2 OAuth signup | `[~]` | full flow + auto-provision + sessions built & tested via dev-login; **live Google blocked on creds** |
 | 6.3 Playground | `[~]` | reusable live model runner; LLM verified in browser; **live SDXL render inherits the 6.1 GPU block** |
+| 6.4 Account + keys | ✅ | session-only view/create/revoke, reveal-once plaintext, recent jobs through `/v1`, immediate revocation |
 
 \* Gate 4 passed with a documented exception: everything is proven on the
 local storage backend; live R2 verification needs credentials (DECISIONS 026).
@@ -69,6 +73,24 @@ local storage backend; live R2 verification needs credentials (DECISIONS 026).
 
 ---
 
+## Phase 6.4 verification
+
+- `/account` reuses the product shell, sign-in card, status primitives, and
+  responsive styling from the existing customer UI.
+- Key management lives under session-only `/api/account/*` routes, leaving the
+  public `/v1` contract unchanged. List and revoke responses contain metadata
+  only; create returns the generated plaintext once and stores only its hash.
+- Recent activity comes from session-authenticated `GET /v1/jobs`, preserving
+  the dashboard-uses-public-API rule.
+- `tests/account-keys.test.js` proves session and same-origin enforcement,
+  hash-only persistence, workspace isolation, idempotent revocation, and an
+  immediate `401` from `/v1` after revocation.
+- Desktop and 390px mobile browser checks found no horizontal overflow or
+  off-screen controls; create/reveal/two-step-revoke states completed with no
+  console errors.
+
+---
+
 ## How to run & verify (Windows dev box)
 
 ```bash
@@ -77,7 +99,7 @@ docker compose up -d              # Postgres on localhost:5433
 npx prisma migrate dev            # apply migrations
 npm run seed                      # dev workspace + API key (printed once) + models
 docker build -t nodera/llm-worker workers/llm-worker
-npm test                          # 66 tests (boots the app itself; needs Docker)
+npm test                          # 70 tests (boots the app itself; needs Docker)
 npm run smoke                     # real end-to-end (needs Ollama + llama3.1:8b)
 npm run dev:all                   # web(:3000) + dispatcher(:3001) + one agent
 ```
