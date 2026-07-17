@@ -3,36 +3,15 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/client/api.js";
+import {
+  buildModelInput,
+  initialModelValues,
+  modelFields,
+  validateModelValues,
+} from "@/lib/client/model-form.js";
 import { Button, C, El, Panel, StatusDot, css, humanStatus } from "@/components/ui.js";
 
 const TERMINAL = new Set(["succeeded", "failed", "canceled"]);
-
-function initialValues(model) {
-  const values = {};
-  for (const [name, definition] of Object.entries(model.params)) {
-    values[name] = name === "prompt" ? "" : (definition.default ?? "");
-  }
-  return values;
-}
-
-function fieldLabel(name) {
-  return {
-    prompt: "Prompt",
-    max_tokens: "Maximum tokens",
-    width: "Width",
-    height: "Height",
-  }[name] || name.replaceAll("_", " ");
-}
-
-function buildInput(model, values) {
-  const input = {};
-  for (const [name, definition] of Object.entries(model.params)) {
-    const value = values[name];
-    if (value === undefined || value === "") continue;
-    input[name] = definition.type === "integer" ? Number(value) : value;
-  }
-  return input;
-}
 
 export function ModelRunner({ models }) {
   const [selectedSlug, setSelectedSlug] = useState(null);
@@ -69,8 +48,8 @@ export function ModelRunner({ models }) {
   );
 }
 
-function JobComposer({ model }) {
-  const [values, setValues] = useState(() => initialValues(model));
+export function JobComposer({ model }) {
+  const [values, setValues] = useState(() => initialModelValues(model));
   const [showOptions, setShowOptions] = useState(false);
   const [phase, setPhase] = useState("idle");
   const [job, setJob] = useState(null);
@@ -82,8 +61,9 @@ function JobComposer({ model }) {
   async function run(event) {
     event.preventDefault();
     setError(null);
-    if (!String(values.prompt || "").trim()) {
-      setError("Type a prompt first - it is the only required field.");
+    const validationError = validateModelValues(model, values);
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
@@ -95,7 +75,7 @@ function JobComposer({ model }) {
 
     try {
       const created = await api.createJob(
-        { model: model.slug, input: buildInput(model, values) },
+        { model: model.slug, input: buildModelInput(model, values) },
         { signal: controller.signal }
       );
       setPhase("polling");
@@ -116,21 +96,25 @@ function JobComposer({ model }) {
   }
 
   const busy = phase === "submitting" || phase === "polling";
-  const options = Object.entries(model.params).filter(([name]) => name !== "prompt");
+  const fields = modelFields(model);
+  const required = fields.filter((field) => field.required);
+  const options = fields.filter((field) => !field.required);
 
   return (
     <form onSubmit={run}>
       <Panel s="padding:18px 20px">
-        <label className="nodera-field-label" htmlFor={`${model.slug}-prompt`}>Prompt</label>
-        <textarea
-          id={`${model.slug}-prompt`}
-          rows={5}
-          value={values.prompt ?? ""}
-          onChange={(event) => setValues((current) => ({ ...current, prompt: event.target.value }))}
-          placeholder={model.modality === "image" ? "Describe the image you want to create..." : "Tell the model what you want it to write..."}
-          className="nodera-textarea"
-          disabled={busy}
-        />
+        <div className="nodera-required-fields">
+          {required.map((field) => (
+            <ModelField
+              key={field.name}
+              field={field}
+              model={model}
+              value={values[field.name] ?? ""}
+              disabled={busy}
+              onChange={(value) => setValues((current) => ({ ...current, [field.name]: value }))}
+            />
+          ))}
+        </div>
 
         {options.length ? (
           <>
@@ -144,17 +128,16 @@ function JobComposer({ model }) {
             </button>
             {showOptions ? (
               <div className="nodera-options-grid">
-                {options.map(([name, definition]) => (
-                  <label key={name} className="nodera-option-field">
-                    <span>{fieldLabel(name)}</span>
-                    <input
-                      type={definition.type === "integer" ? "number" : "text"}
-                      value={values[name] ?? ""}
-                      max={definition.max}
-                      onChange={(event) => setValues((current) => ({ ...current, [name]: event.target.value }))}
-                      disabled={busy}
-                    />
-                  </label>
+                {options.map((field) => (
+                  <ModelField
+                    key={field.name}
+                    field={field}
+                    model={model}
+                    value={values[field.name] ?? ""}
+                    disabled={busy}
+                    onChange={(value) => setValues((current) => ({ ...current, [field.name]: value }))}
+                    compact
+                  />
                 ))}
               </div>
             ) : null}
@@ -172,6 +155,54 @@ function JobComposer({ model }) {
       {job && TERMINAL.has(job.status) ? <Result job={job} /> : null}
     </form>
   );
+}
+
+function ModelField({ field, model, value, disabled, onChange, compact = false }) {
+  const id = `${model.slug}-${field.name}`;
+  const definition = field.definition;
+  const isInteger = definition.type === "integer";
+  const useTextarea = !compact && !isInteger;
+  const hint = fieldHint(definition);
+  return (
+    <label className={compact ? "nodera-option-field" : "nodera-model-field"} htmlFor={id}>
+      <span className="nodera-field-label">{field.label}</span>
+      {useTextarea ? (
+        <textarea
+          id={id}
+          rows={5}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={placeholderFor(model, field)}
+          className="nodera-textarea"
+          disabled={disabled}
+        />
+      ) : (
+        <input
+          id={id}
+          type={isInteger ? "number" : "text"}
+          min={isInteger ? 1 : undefined}
+          max={definition.max}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className={compact ? undefined : "nodera-input"}
+          disabled={disabled}
+        />
+      )}
+      {hint ? <span className="nodera-field-hint">{hint}</span> : null}
+    </label>
+  );
+}
+
+function placeholderFor(model, field) {
+  if (field.name === "prompt" && model.modality === "image") return "Describe the image you want to create...";
+  if (field.name === "prompt") return "Tell the model what you want it to write...";
+  return "";
+}
+
+function fieldHint(definition) {
+  if (definition.max) return `Max ${definition.max}`;
+  if (definition.max_bytes) return `Max ${definition.max_bytes.toLocaleString()} bytes`;
+  return "";
 }
 
 function Pipeline({ phase, status }) {

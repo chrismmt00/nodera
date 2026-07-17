@@ -144,8 +144,7 @@ select {
 .nodera-dev-login label {
   grid-column: 1 / -1;
 }
-.nodera-field-label,
-.nodera-option-field span {
+.nodera-field-label {
   display: block;
   margin-bottom: 6px;
   color: #8b93a7;
@@ -208,6 +207,20 @@ select {
   font-family: var(--font-ibm-plex-mono), monospace;
   font-size: 12px;
 }
+.nodera-required-fields {
+  display: grid;
+  gap: 12px;
+}
+.nodera-model-field {
+  display: block;
+}
+.nodera-field-hint {
+  display: block;
+  margin-top: 5px;
+  color: #6f778a;
+  font-family: var(--font-ibm-plex-mono), monospace;
+  font-size: 10px;
+}
 .nodera-form-actions,
 .nodera-result-header {
   display: flex;
@@ -239,6 +252,69 @@ select {
   margin-top: 12px;
   border: 1px solid #1e2431;
   border-radius: 10px;
+}
+.nodera-models-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.85fr) minmax(0, 1.15fr);
+  align-items: start;
+  gap: 16px;
+}
+.nodera-model-card-grid {
+  display: grid;
+  gap: 14px;
+}
+.nodera-model-card {
+  min-height: 192px;
+  display: flex;
+  flex-direction: column;
+}
+.nodera-model-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.nodera-model-card-top span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 3px 7px;
+  border: 1px solid rgba(93, 230, 255, 0.32);
+  border-radius: 5px;
+  color: #5de6ff;
+  font-family: var(--font-ibm-plex-mono), monospace;
+  font-size: 10px;
+}
+.nodera-model-card-top code,
+.nodera-model-meta {
+  color: #6f778a;
+  font-family: var(--font-ibm-plex-mono), monospace;
+  font-size: 10px;
+}
+.nodera-model-meta {
+  display: grid;
+  gap: 5px;
+  margin: 14px 0;
+}
+.nodera-model-meta span {
+  overflow-wrap: anywhere;
+}
+.nodera-model-card button {
+  width: 100%;
+  margin-top: auto;
+}
+.nodera-model-composer {
+  position: sticky;
+  top: 78px;
+  display: grid;
+  gap: 12px;
+}
+.nodera-selected-model-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 2px 0;
 }
 .nodera-account-layout {
   display: grid;
@@ -621,8 +697,16 @@ select {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .nodera-options-grid,
-  .nodera-dev-login {
+  .nodera-dev-login,
+  .nodera-models-layout {
     grid-template-columns: 1fr;
+  }
+  .nodera-model-composer {
+    position: static;
+  }
+  .nodera-selected-model-heading {
+    align-items: start;
+    flex-direction: column;
   }
   .nodera-key-form > div,
   .nodera-key-reveal,

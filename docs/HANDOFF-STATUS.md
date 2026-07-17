@@ -11,8 +11,8 @@ checkbox list is `docs/TASKS.md`; this doc adds the context, gotchas, and
 
 ## TL;DR
 
-- **Phases 0–5 are complete and their gates pass.** Phase 6 is in progress.
-- **81 integration tests pass** (`npm test`), plus `npm run smoke` (real
+- **Phases 0–5 are complete and their gates pass.** Phase 7 is in progress.
+- **82 integration tests pass** (`npm test`), plus `npm run smoke` (real
   end-to-end AI), `npm run test:multi` (multi-provider drain).
 - The system runs a **real** job end to end: customer API → dispatcher →
   provider agent → hardened Docker worker → local Ollama (`llama3.1:8b` on GPU)
@@ -36,6 +36,10 @@ checkbox list is `docs/TASKS.md`; this doc adds the context, gotchas, and
 - **Phase 6.8 (customer stopwatch) is instrumented and verified:** a read-only
   Prisma report measures signup to first succeeded job per workspace without
   exposing user or job content. The dev row is 35.298s; human acceptance waits.
+- **Phase 7.1 (model gallery) is implemented and verified:** `/models` shows
+  API-driven model cards and uses the same generated composer as the playground;
+  adding an active DB model is covered by integration test with no frontend
+  code change.
 - Several tasks are **`[~]` blocked on human-only resources** (R2 creds,
   Google OAuth creds, a ≥12 GB GPU, a VPS/domain, live stopwatch tests). Each
   has exact instructions in `docs/LAUNCH-CHECKLIST.md`.
@@ -60,6 +64,7 @@ checkbox list is `docs/TASKS.md`; this doc adds the context, gotchas, and
 | 6.6 Public docs | ✅ | responsive `/docs`, executable quickstart, all customer/provider endpoints, webhook verification |
 | 6.7 Production deploy | `[~]` | deploy package verified locally; VPS/domain/TLS/live credentials and external job remain owner-blocked |
 | 6.8 Customer stopwatch | `[~]` | measurement/report tested; dev row 35.298s; unassisted real-person run remains owner-blocked |
+| 7.1 Model gallery | ✅ | `/models` cards + shared generated composer from `GET /v1/models`; DB-added model integration test |
 
 \* Gate 4 passed with a documented exception: everything is proven on the
 local storage backend; live R2 verification needs credentials (DECISIONS 026).
@@ -122,7 +127,7 @@ local storage backend; live R2 verification needs credentials (DECISIONS 026).
   `Content-Length` is absent. Oversized bodies never create queue rows.
 - `tests/rate-limits.test.js` concurrently hammers API-key and session callers,
   proves exact accepted counts and credential isolation, and confirms every
-  accepted row remains a valid queued job. All 81 integration tests pass.
+  accepted row remains a valid queued job. All 82 integration tests pass.
 
 ---
 
@@ -141,7 +146,7 @@ local storage backend; live R2 verification needs credentials (DECISIONS 026).
   contract and remains an explicit follow-up rather than an invented endpoint.
 - `tests/public-docs.test.js` provisions a fresh workspace and API key, executes
   the published quickstart payload through real `curl`, and retrieves the
-  resulting queued job. The complete suite passes 81/81.
+  resulting queued job. The complete suite passes 82/82.
 - Desktop and 390px mobile layout checks found no page overflow or clipped
   controls; environment/shell switching and copy feedback work with no browser
   console errors.
@@ -181,9 +186,29 @@ local storage backend; live R2 verification needs credentials (DECISIONS 026).
   multi-user workspaces start at the earliest signup, and exactly 60.000s does
   not satisfy the strict "under 60" target.
 - `tests/onboarding-report.test.js` covers the derivation and the user-facing
-  command. The full suite passes 81/81.
+  command. The full suite passes 82/82.
 - The current dev workspace reports 35.298s. This proves instrumentation but is
   deliberately not presented as the required unassisted real-person result.
+
+---
+
+## Phase 7.1 verification
+
+- `/models` is a real route in the shared product shell, with loading, sign-in,
+  error, empty, desktop, and mobile states.
+- Cards are generated from session-authenticated `GET /v1/models` only:
+  modality, plain-language description, params, and max runtime all come from
+  the public menu contract.
+- The playground and gallery share one generated `JobComposer` plus
+  `model-form.js` helper for labels, defaults, required-field validation, and
+  typed JSON input. Required params render before optional params; optional
+  fields stay under the existing Options control.
+- `tests/model-gallery.test.js` creates a temporary active Prisma model with a
+  new param, confirms the menu exposes it, confirms the generated form helper
+  emits and types that field, and creates a job through `/v1/jobs`.
+- Browser checks on desktop and 390px mobile found no horizontal overflow; the
+  gallery collapses to one column on mobile and keeps the selected composer
+  usable.
 
 ---
 
@@ -195,7 +220,7 @@ docker compose up -d              # Postgres on localhost:5433
 npx prisma migrate dev            # apply migrations
 npm run seed                      # dev workspace + API key (printed once) + models
 docker build -t nodera/llm-worker workers/llm-worker
-npm test                          # 81 tests (boots the app itself; needs Docker)
+npm test                          # 82 tests (boots the app itself; needs Docker)
 npm run --silent onboarding:report # signup→first-success metrics (JSON)
 npm run smoke                     # real end-to-end (needs Ollama + llama3.1:8b)
 npm run dev:all                   # web(:3000) + dispatcher(:3001) + one agent

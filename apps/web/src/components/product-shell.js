@@ -7,6 +7,7 @@ import { Button, C, El } from "@/components/ui.js";
 export function ProductShell({ children, email, onSignOut, showNavigation = false, wide = false }) {
   const pathname = usePathname();
   const links = [
+    { href: "/models", label: "Models" },
     { href: "/playground", label: "Playground" },
     { href: "/account", label: "Account" },
     { href: "/docs", label: "Docs" },

@@ -17,7 +17,8 @@ plan, the gotchas, and where the code goes.
 
 All buildable Phase 6 work is implemented. Live SDXL remains grouped with the
 Phase 6.1 hardware block; 6.7 awaits external infrastructure, and 6.8 awaits an
-unassisted real-person stopwatch. The next buildable task is 7.1.
+unassisted real-person stopwatch. Phase 7 is underway; the next buildable task
+is 7.2.
 
 ### 6.7 Production deploy — **[~] blocked-on-human**
 - Complete in repo: fail-fast production env validation; standalone web,
@@ -58,10 +59,12 @@ simulation code per screen as it goes live. Every page needs loading/empty/
 error states and must work on mobile; never show a raw enum alone
 (use `humanStatus()`).
 
-- **7.1 Model gallery** — plain-language cards; form generated from
-  `GET /v1/models` params. Acceptance: adding a menu model in the DB adds a
-  working gallery page with zero code changes (the playground form-generator
-  from 6.3 already does param→form; generalize it).
+- **7.1 Model gallery — done.** `/models` lists active menu models as
+  plain-language cards and reuses the shared generated composer. The form
+  helper derives labels, defaults, required fields, and typed inputs from
+  `GET /v1/models` params; `tests/model-gallery.test.js` inserts a temporary
+  DB model and proves it appears, generates fields, and creates a job with zero
+  frontend code changes.
 - **7.2 Jobs dashboard** — live statuses (human-readable), newest first, updates
   without manual refresh (poll `GET /v1/jobs`).
 - **7.3 Job detail** — input shown, output rendered (image as image, text as
