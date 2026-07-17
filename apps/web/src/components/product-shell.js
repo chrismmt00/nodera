@@ -4,21 +4,23 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button, C, El } from "@/components/ui.js";
 
-export function ProductShell({ children, email, onSignOut }) {
+export function ProductShell({ children, email, onSignOut, showNavigation = false, wide = false }) {
   const pathname = usePathname();
   const links = [
     { href: "/playground", label: "Playground" },
     { href: "/account", label: "Account" },
+    { href: "/docs", label: "Docs" },
   ];
+  const visibleLinks = email ? links : links.filter((link) => link.href !== "/account");
   return (
     <div className="nodera-shell">
       <header className="nodera-topbar">
         <Link href="/" className="nodera-brand">
           nodera<span>_</span>
         </Link>
-        {email ? (
+        {email || showNavigation ? (
           <nav aria-label="Customer navigation" className="nodera-nav-links">
-            {links.map((link) => (
+            {visibleLinks.map((link) => (
               <Link
                 href={link.href}
                 aria-current={pathname === link.href ? "page" : undefined}
@@ -37,7 +39,7 @@ export function ProductShell({ children, email, onSignOut }) {
           </div>
         ) : null}
       </header>
-      <main className="nodera-page">{children}</main>
+      <main className={`nodera-page${wide ? " is-wide" : ""}`}>{children}</main>
     </div>
   );
 }

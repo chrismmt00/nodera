@@ -13,6 +13,7 @@
  */
 
 import { Fragment, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 
 /* Parse an inline CSS declaration string into a React style object. */
 function css(str) {
@@ -752,7 +753,7 @@ export default function NoderaApp() {
           <El s="display:flex;align-items:center;gap:22px;padding:16px 32px;position:relative">
             <El as="span" s="font-weight:700;font-size:19px;letter-spacing:-.3px">nodera<El as="span" s="color:#5de6ff">_</El></El>
             <El as="span" s="flex:1" />
-            <El as="span" s="font-size:13.5px;color:#6b7385;cursor:pointer" sh="color:#9df0ff">Docs</El>
+            <El as={Link} href="/docs" s="font-size:13.5px;color:#6b7385;text-decoration:none" sh="color:#9df0ff">Docs</El>
             <El as="span" onClick={v.goProviderStart} s="font-size:13.5px;color:#6b7385;cursor:pointer" sh="color:#9df0ff">For providers</El>
             <El as="span" onClick={v.signIn} s="display:inline-flex;border-radius:9px;padding:7px 16px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);font-size:13px;font-weight:500;cursor:pointer" sh="background:rgba(255,255,255,.1)">Sign in</El>
           </El>

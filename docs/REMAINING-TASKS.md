@@ -15,15 +15,9 @@ plan, the gotchas, and where the code goes.
 
 ## Phase 6 — remainder (public readiness)
 
-Phase 6.5 is implemented and tested under concurrent API-key and session
-bursts. Live SDXL rendering remains grouped with the Phase 6.1 hardware block.
-The next buildable task is 6.6.
-
-### 6.6 Public docs
-- Quickstart + per-endpoint curl examples + the webhook verification snippet
-  (copy from `docs/api.md`, which already has the exact snippet). "A fresh key
-  completes the quickstart verbatim." Can live as a `/docs` page or markdown
-  served by the app. Keep examples runnable against production once deployed.
+Phase 6.6 is implemented: `/docs` publishes executable local/production
+examples for every v1 endpoint and webhook verification. Live SDXL rendering
+remains grouped with the Phase 6.1 hardware block. The next task is 6.7.
 
 ### 6.7 Production deploy — **[~] blocked-on-human**
 - Host control plane + dispatcher + Postgres; R2 live; real domain + TLS;
@@ -183,9 +177,13 @@ remaining `[~]` item has exact LAUNCH-CHECKLIST instructions. **Gate 8 + Gate 9
 
 ## Known open threads to resolve along the way
 
-1. **Windows provider path (blueprint §11 flag):** Docker Desktop is friction
+1. **Webhook signing-secret delivery:** `docs/api.md` defines a per-workspace
+   secret for verifying signed deliveries, but neither `/v1` nor the account UI
+   exposes or rotates it. Resolve this through a session-only account flow
+   without extending the public contract unless `docs/api.md` changes first.
+2. **Windows provider path (blueprint §11 flag):** Docker Desktop is friction
    for non-technical providers; a native (bundled-Ollama) path may be needed
    for the consumer app. Not v1-blocking; don't forget.
-2. **`docs/TASKS.md` line 24** still says Phase 1 smoke "may assign directly in
+3. **`docs/TASKS.md` line 24** still says Phase 1 smoke "may assign directly in
    DB" — smoke was upgraded to the real dispatcher+agent in 2.2/3.5; the note is
    stale but harmless.

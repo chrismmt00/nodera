@@ -72,7 +72,7 @@ One task = one AI session = one commit. Do them in order. Check the box only whe
 - [~] **6.3 Playground v1.** Model select, prompt, Run, live status, rendered result — using public API only. ✓ when: works for both models. *(LLM verified live in the browser; both model forms and request paths are tested. Live SDXL rendering remains blocked by the ≥12 GB GPU requirement recorded in 6.1.)*
 - [x] **6.4 Keys + account page.** View/create/revoke keys, recent jobs. ✓ when: revoked key → 401 immediately.
 - [x] **6.5 Rate limits + input limits.** Per-key limits, 429 + Retry-After, max prompt bytes enforced at POST /v1/jobs. ✓ when: hammering script gets throttled; queue unharmed.
-- [ ] **6.6 Public docs.** Quickstart + per-endpoint examples + webhook verification, published. ✓ when: a fresh key completes the quickstart verbatim.
+- [x] **6.6 Public docs.** Quickstart + per-endpoint examples + webhook verification, published. ✓ when: a fresh key completes the quickstart verbatim.
 - [ ] **6.7 Production deploy.** Control plane + dispatcher + Postgres hosted, R2 live, domain + TLS, providers connect over the internet. ✓ when: full job succeeds in production from an external customer key.
 - [ ] **6.8 Stopwatch.** Record signup→first-succeeded-job per workspace; test the 60s target with a real person. ✓ when: measured under 60s.
 

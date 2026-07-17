@@ -101,6 +101,9 @@ select {
   padding: 26px 28px 48px;
   flex: 1;
 }
+.nodera-page.is-wide {
+  width: min(100%, 1180px);
+}
 .nodera-page-heading {
   display: flex;
   align-items: flex-end;
@@ -305,6 +308,287 @@ select {
 .nodera-job-row {
   grid-template-columns: minmax(200px, 1fr) minmax(130px, 1fr) auto;
 }
+.nodera-docs-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 24px;
+  padding: 14px 0 24px;
+  border-bottom: 1px solid #1e2431;
+}
+.nodera-docs-kicker,
+.nodera-docs-section-label {
+  color: #5de6ff;
+  font-family: var(--font-ibm-plex-mono), monospace;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+.nodera-docs-header h1 {
+  margin: 7px 0 0;
+  font-size: 28px;
+  letter-spacing: 0;
+}
+.nodera-docs-header p,
+.nodera-docs-section > p,
+.nodera-endpoint > p {
+  color: #8b93a7;
+  line-height: 1.65;
+}
+.nodera-docs-header p {
+  margin: 7px 0 0;
+  font-size: 14px;
+}
+.nodera-docs-controls {
+  display: flex;
+  gap: 14px;
+}
+.nodera-docs-controls > div > span {
+  display: block;
+  margin-bottom: 6px;
+  color: #8b93a7;
+  font-size: 10px;
+}
+.nodera-segmented {
+  display: flex;
+  padding: 3px;
+  border: 1px solid #1e2431;
+  border-radius: 8px;
+  background: #0b0d13;
+}
+.nodera-segmented button {
+  min-height: 30px;
+  border: 0;
+  border-radius: 5px;
+  padding: 5px 10px;
+  background: transparent;
+  color: #8b93a7;
+  cursor: pointer;
+  font-size: 11px;
+}
+.nodera-segmented button[aria-pressed="true"] {
+  background: #1e2431;
+  color: #e8ecf4;
+}
+.nodera-docs-base {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px 0;
+  border-bottom: 1px solid #1e2431;
+  color: #8b93a7;
+  font-size: 11px;
+}
+.nodera-docs-base code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: #7cf5a8;
+}
+.nodera-docs-layout {
+  display: grid;
+  grid-template-columns: 205px minmax(0, 1fr);
+  gap: 38px;
+}
+.nodera-docs-nav {
+  position: sticky;
+  top: 84px;
+  align-self: start;
+  display: grid;
+  gap: 3px;
+  max-height: calc(100vh - 108px);
+  overflow-y: auto;
+  padding: 24px 22px 24px 0;
+  border-right: 1px solid #1e2431;
+}
+.nodera-docs-nav span {
+  margin: 15px 0 5px;
+  color: #4a5164;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.nodera-docs-nav a {
+  padding: 5px 0;
+  color: #8b93a7;
+  text-decoration: none;
+  font-size: 11px;
+  line-height: 1.3;
+}
+.nodera-docs-nav a:hover {
+  color: #5de6ff;
+}
+.nodera-docs-content {
+  min-width: 0;
+}
+.nodera-docs-section {
+  padding: 32px 0;
+  border-bottom: 1px solid #1e2431;
+  scroll-margin-top: 76px;
+}
+.nodera-docs-section h2 {
+  margin: 7px 0 0;
+  font-size: 21px;
+  letter-spacing: 0;
+}
+.nodera-docs-section > p {
+  margin: 8px 0 18px;
+  font-size: 13px;
+}
+.nodera-quickstart-steps {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: quickstep;
+}
+.nodera-quickstart-steps li {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 11px;
+  counter-increment: quickstep;
+}
+.nodera-quickstart-steps li::before {
+  content: counter(quickstep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid rgba(93, 230, 255, 0.35);
+  border-radius: 50%;
+  color: #5de6ff;
+  font-family: var(--font-ibm-plex-mono), monospace;
+  font-size: 11px;
+}
+.nodera-quickstart-steps strong,
+.nodera-quickstart-steps span {
+  display: block;
+}
+.nodera-quickstart-steps strong {
+  font-size: 13px;
+}
+.nodera-quickstart-steps span {
+  margin-top: 3px;
+  color: #8b93a7;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.nodera-code-block {
+  margin: 13px 0;
+  overflow: hidden;
+  border: 1px solid #1e2431;
+  border-radius: 8px;
+  background: #090b10;
+}
+.nodera-code-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 35px;
+  padding: 0 10px 0 13px;
+  border-bottom: 1px solid #1e2431;
+  background: #0d0f16;
+  color: #6f778a;
+  font-size: 10px;
+}
+.nodera-code-toolbar button {
+  border: 0;
+  background: transparent;
+  color: #5de6ff;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+}
+.nodera-code-block pre {
+  margin: 0;
+  overflow: auto;
+  padding: 14px;
+  color: #d7deeb;
+  font-family: var(--font-ibm-plex-mono), monospace;
+  font-size: 11px;
+  line-height: 1.65;
+  white-space: pre;
+}
+.nodera-endpoint {
+  padding: 28px 0 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  scroll-margin-top: 76px;
+}
+.nodera-endpoint-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.nodera-endpoint-title code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: #e8ecf4;
+  font-size: 13px;
+}
+.nodera-method {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  min-height: 22px;
+  border: 1px solid rgba(124, 245, 168, 0.3);
+  border-radius: 5px;
+  color: #7cf5a8;
+  font-family: var(--font-ibm-plex-mono), monospace;
+  font-size: 9px;
+  font-weight: 600;
+}
+.nodera-method.is-post {
+  border-color: rgba(93, 230, 255, 0.3);
+  color: #5de6ff;
+}
+.nodera-endpoint h3 {
+  margin: 12px 0 0;
+  font-size: 16px;
+  letter-spacing: 0;
+}
+.nodera-endpoint > p {
+  margin: 6px 0;
+  font-size: 12px;
+}
+.nodera-auth-line {
+  margin: 10px 0 15px;
+  color: #6f778a;
+  font-size: 11px;
+}
+.nodera-auth-line code,
+.nodera-docs-content p code,
+.nodera-quickstart-steps code,
+.nodera-docs-notice code {
+  color: #d7deeb;
+  font-family: var(--font-ibm-plex-mono), monospace;
+  font-size: 0.92em;
+}
+.nodera-docs-notice {
+  margin: 12px 0;
+  padding-left: 12px;
+  border-left: 2px solid #ffcf70;
+  color: #aeb5c4;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.nodera-error-codes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 16px 0;
+}
+.nodera-error-codes code {
+  padding: 4px 7px;
+  border: 1px solid #1e2431;
+  border-radius: 5px;
+  background: #0b0d13;
+  color: #aeb5c4;
+  font-size: 10px;
+}
 
 @media (max-width: 700px) {
   .nodera-topbar {
@@ -351,6 +635,38 @@ select {
   }
   .nodera-job-row > div:last-child {
     text-align: left !important;
+  }
+  .nodera-docs-header {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+  .nodera-docs-controls {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .nodera-docs-layout {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .nodera-docs-nav {
+    position: static;
+    display: flex;
+    gap: 14px;
+    max-height: none;
+    overflow-x: auto;
+    padding: 13px 0;
+    border-right: 0;
+    border-bottom: 1px solid #1e2431;
+    white-space: nowrap;
+  }
+  .nodera-docs-nav span {
+    display: none;
+  }
+  .nodera-docs-nav a {
+    flex: 0 0 auto;
+  }
+  .nodera-docs-section {
+    padding: 26px 0;
   }
 }
 
