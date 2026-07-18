@@ -1,6 +1,6 @@
 # Nodera — Handoff Status (what's been built)
 
-_Snapshot for the next engineer/AI picking this up. Updated 2026-07-17._
+_Snapshot for the next engineer/AI picking this up. Updated 2026-07-18._
 
 This is the ground truth of where the build stands. The authoritative
 checkbox list is `docs/TASKS.md`; this doc adds the context, gotchas, and
@@ -12,7 +12,7 @@ checkbox list is `docs/TASKS.md`; this doc adds the context, gotchas, and
 ## TL;DR
 
 - **Phases 0–5 are complete and their gates pass.** Phase 7 is in progress.
-- **83 integration tests pass** (`npm test`), plus `npm run smoke` (real
+- **84 integration tests pass** (`npm test`), plus `npm run smoke` (real
   end-to-end AI), `npm run test:multi` (multi-provider drain).
 - The system runs a **real** job end to end: customer API → dispatcher →
   provider agent → hardened Docker worker → local Ollama (`llama3.1:8b` on GPU)
@@ -43,6 +43,9 @@ checkbox list is `docs/TASKS.md`; this doc adds the context, gotchas, and
 - **Phase 7.2 (jobs dashboard) is implemented and verified:** `/jobs` polls the
   public jobs list, shows newest-first activity with human-readable statuses,
   and reuses the same compact component on the account page.
+- **Phase 7.3 (job detail) is implemented and verified:** `/jobs/:id` shows
+  original input, rendered text/image output, downloads, run metadata, plain
+  errors, Retry, and Re-run through the public `/v1` API.
 - Several tasks are **`[~]` blocked on human-only resources** (R2 creds,
   Google OAuth creds, a ≥12 GB GPU, a VPS/domain, live stopwatch tests). Each
   has exact instructions in `docs/LAUNCH-CHECKLIST.md`.
@@ -69,6 +72,7 @@ checkbox list is `docs/TASKS.md`; this doc adds the context, gotchas, and
 | 6.8 Customer stopwatch | `[~]` | measurement/report tested; dev row 35.298s; unassisted real-person run remains owner-blocked |
 | 7.1 Model gallery | ✅ | `/models` cards + shared generated composer from `GET /v1/models`; DB-added model integration test |
 | 7.2 Jobs dashboard | ✅ | `/jobs` newest-first polling list, human statuses, responsive summary, account recent-jobs reuse |
+| 7.3 Job detail | complete | `/jobs/:id` detail, original input, text/image rendering, downloads, Retry/Re-run |
 
 \* Gate 4 passed with a documented exception: everything is proven on the
 local storage backend; live R2 verification needs credentials (DECISIONS 026).
@@ -131,7 +135,7 @@ local storage backend; live R2 verification needs credentials (DECISIONS 026).
   `Content-Length` is absent. Oversized bodies never create queue rows.
 - `tests/rate-limits.test.js` concurrently hammers API-key and session callers,
   proves exact accepted counts and credential isolation, and confirms every
-  accepted row remains a valid queued job. All 83 integration tests pass.
+  accepted row remains a valid queued job. All 84 integration tests pass.
 
 ---
 
@@ -235,6 +239,28 @@ local storage backend; live R2 verification needs credentials (DECISIONS 026).
 
 ---
 
+## Phase 7.3 verification
+
+- `GET /v1/jobs/:id` now returns the original same-workspace `input`, documented
+  in `docs/api.md`, so the dashboard can show and re-run jobs without a
+  dashboard-only API route.
+- `/jobs/:id` is a signed-in product-shell route with loading, sign-in, error,
+  live-polling, desktop, and mobile states. Dashboard rows now link to the
+  detail page.
+- The detail view renders text output as text, image artifacts as images,
+  artifact rows as download links, run metadata, original prompt/JSON input,
+  plain-language failed-job errors, and Retry/Re-run buttons that submit the
+  same model/input through `POST /v1/jobs`.
+- `tests/job-detail-page.test.js` seeds succeeded and failed jobs for both
+  `llama-3.1-8b` and `sdxl-1.0`, proves the public detail response includes
+  input/output/error/artifacts, downloads a real PNG through the artifact route,
+  and verifies the rerun payload creates a new queued job.
+- Browser checks on desktop and 390px mobile covered a succeeded image detail
+  and a failed text detail. Both showed the expected controls and no horizontal
+  overflow.
+
+---
+
 ## How to run & verify (Windows dev box)
 
 ```bash
@@ -243,7 +269,7 @@ docker compose up -d              # Postgres on localhost:5433
 npx prisma migrate dev            # apply migrations
 npm run seed                      # dev workspace + API key (printed once) + models
 docker build -t nodera/llm-worker workers/llm-worker
-npm test                          # 83 tests (boots the app itself; needs Docker)
+npm test                          # 84 tests (boots the app itself; needs Docker)
 npm run --silent onboarding:report # signup→first-success metrics (JSON)
 npm run smoke                     # real end-to-end (needs Ollama + llama3.1:8b)
 npm run dev:all                   # web(:3000) + dispatcher(:3001) + one agent

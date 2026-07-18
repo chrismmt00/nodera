@@ -68,6 +68,7 @@ Newest first. Only the caller's workspace, always.
   "job_id": "job_abc123",
   "status": "succeeded",
   "model": "llama-3.1-8b",
+  "input": { "prompt": "Write a follow-up email for this lead.", "max_tokens": 400 },
   "created_at": "...",
   "finalized_at": "...",
   "attempts": 1,
@@ -79,7 +80,7 @@ Newest first. Only the caller's workspace, always.
 }
 ```
 
-`run` is the winning/final run only. `output` is the small inline result when applicable; large outputs are artifacts. On `failed`: `error` is `{ "code": "...", "message": "..." }` (plain-language message).
+`input` is the original same-workspace job input. `run` is the winning/final run only. `output` is the small inline result when applicable; large outputs are artifacts. On `failed`: `error` is `{ "code": "...", "message": "..." }` (plain-language message).
 
 ### GET /v1/jobs/:id/artifacts/:name — download artifact
 

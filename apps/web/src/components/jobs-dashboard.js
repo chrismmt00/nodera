@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/client/api.js";
 import { isLiveJob, summarizeJobs } from "@/lib/client/jobs-view.js";
@@ -102,7 +103,7 @@ function JobsList({ jobs, emptyText }) {
   return (
     <div className="nodera-jobs-list">
       {jobs.map((job) => (
-        <div className="nodera-job-row is-dashboard" key={job.job_id}>
+        <Link href={`/jobs/${job.job_id}`} className="nodera-job-row is-dashboard" key={job.job_id}>
           <div>
             <El s="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600">
               <StatusDot color={statusColor(job.status)} pulse={isLiveJob(job)} />
@@ -119,7 +120,7 @@ function JobsList({ jobs, emptyText }) {
           <El s={`font-size:11px;color:${C.dim};text-align:right`}>
             {job.finalized_at ? `Finished ${formatDate(job.finalized_at)}` : "Still working"}
           </El>
-        </div>
+        </Link>
       ))}
     </div>
   );

@@ -43,6 +43,7 @@ test("job detail: queued job has every contract field", async () => {
     "created_at",
     "error",
     "finalized_at",
+    "input",
     "job_id",
     "model",
     "output",
@@ -51,6 +52,7 @@ test("job detail: queued job has every contract field", async () => {
   ]);
   assert.equal(body.job_id, created.job_id);
   assert.equal(body.status, "queued");
+  assert.deepEqual(body.input, { prompt: "detail test" });
   assert.equal(body.attempts, 0);
   assert.equal(body.run, null);
   assert.equal(body.output, null);

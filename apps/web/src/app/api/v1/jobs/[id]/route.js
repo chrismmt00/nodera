@@ -66,6 +66,7 @@ export const GET = withRoute(async (request, ctx) => {
     job_id: job.id,
     status: job.status,
     model: job.modelSlug,
+    input: job.input,
     created_at: job.createdAt.toISOString(),
     finalized_at: job.finalizedAt ? job.finalizedAt.toISOString() : null,
     attempts: job.attempts,

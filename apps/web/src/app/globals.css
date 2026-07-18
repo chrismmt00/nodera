@@ -6,6 +6,7 @@ html,
 body {
   margin: 0;
   height: 100%;
+  overflow-x: hidden;
   background: #07080c;
   font-family: var(--font-space-grotesk), system-ui, sans-serif;
   color: #e8ecf4;
@@ -384,9 +385,15 @@ select {
 }
 .nodera-job-row {
   grid-template-columns: minmax(200px, 1fr) minmax(130px, 1fr) auto;
+  color: inherit;
+  text-decoration: none;
 }
 .nodera-job-row.is-dashboard {
   grid-template-columns: minmax(260px, 1.2fr) minmax(160px, 0.8fr) minmax(160px, auto);
+}
+.nodera-job-row:hover {
+  background: rgba(93, 230, 255, 0.04);
+  color: inherit;
 }
 .nodera-jobs-dashboard {
   display: grid;
@@ -403,6 +410,145 @@ select {
   gap: 8px;
   color: #8b93a7;
   font-size: 11px;
+}
+.nodera-job-detail {
+  display: grid;
+  gap: 14px;
+}
+.nodera-detail-topline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6f778a;
+  font-size: 11px;
+}
+.nodera-detail-topline a {
+  color: #5de6ff;
+  text-decoration: none;
+}
+.nodera-detail-topline code,
+.nodera-detail-json,
+.nodera-detail-text-output,
+.nodera-detail-meta strong.is-mono {
+  font-family: var(--font-ibm-plex-mono), monospace;
+}
+.nodera-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nodera-job-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  align-items: start;
+  gap: 16px;
+}
+.nodera-detail-main,
+.nodera-detail-side {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+}
+.nodera-detail-error {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid rgba(255, 128, 128, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 128, 128, 0.05);
+}
+.nodera-detail-text-output,
+.nodera-detail-json {
+  width: 100%;
+  margin: 12px 0 0;
+  overflow: auto;
+  border: 1px solid #1e2431;
+  border-radius: 8px;
+  background: #090b10;
+  color: #d7deeb;
+  line-height: 1.65;
+}
+.nodera-detail-text-output {
+  max-height: 520px;
+  padding: 15px 17px;
+  white-space: pre-wrap;
+  font-size: 14px;
+}
+.nodera-detail-json {
+  padding: 13px;
+  white-space: pre;
+  font-size: 11px;
+}
+.nodera-detail-image {
+  display: block;
+  width: min(100%, 720px);
+  height: auto;
+  margin-top: 12px;
+  border: 1px solid #1e2431;
+  border-radius: 8px;
+}
+.nodera-detail-meta {
+  display: grid;
+  gap: 11px;
+  margin-top: 13px;
+}
+.nodera-detail-meta div {
+  min-width: 0;
+}
+.nodera-detail-meta span,
+.nodera-artifact-row em {
+  display: block;
+  color: #8b93a7;
+  font-size: 10px;
+}
+.nodera-detail-meta strong {
+  display: block;
+  min-width: 0;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+  color: #e8ecf4;
+  font-size: 12px;
+  font-weight: 600;
+}
+.nodera-artifact-list {
+  display: grid;
+}
+.nodera-artifact-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  color: inherit;
+  text-decoration: none;
+}
+.nodera-artifact-row:first-child {
+  border-top: 0;
+}
+.nodera-artifact-row:hover {
+  background: rgba(93, 230, 255, 0.04);
+  color: inherit;
+}
+.nodera-artifact-row strong {
+  display: block;
+  overflow-wrap: anywhere;
+  color: #e8ecf4;
+  font-size: 12px;
+}
+.nodera-artifact-row em {
+  margin-top: 3px;
+  font-style: normal;
+}
+.nodera-artifact-row b {
+  color: #5de6ff;
+  font-size: 11px;
+}
+.nodera-sr-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
 }
 .nodera-docs-header {
   display: grid;
@@ -706,7 +852,8 @@ select {
   }
   .nodera-page-heading,
   .nodera-form-actions,
-  .nodera-result-header {
+  .nodera-result-header,
+  .nodera-detail-actions {
     align-items: stretch;
     flex-direction: column;
   }
@@ -733,7 +880,9 @@ select {
   .nodera-key-row,
   .nodera-job-row,
   .nodera-job-row.is-dashboard,
-  .nodera-job-summary-grid {
+  .nodera-job-summary-grid,
+  .nodera-job-detail-grid,
+  .nodera-artifact-row {
     grid-template-columns: 1fr;
   }
   .nodera-jobs-refresh-state {

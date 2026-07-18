@@ -1,6 +1,6 @@
 # Nodera — Remaining Work (leftover phases)
 
-_Handoff companion to `docs/HANDOFF-STATUS.md`. Updated 2026-07-17._
+_Handoff companion to `docs/HANDOFF-STATUS.md`. Updated 2026-07-18._
 
 Everything left to reach v1 "production-ready" (Gate 8 + Gate 9). Work in
 order, one task per commit, tests + `npm run smoke` green before each commit,
@@ -18,7 +18,7 @@ plan, the gotchas, and where the code goes.
 All buildable Phase 6 work is implemented. Live SDXL remains grouped with the
 Phase 6.1 hardware block; 6.7 awaits external infrastructure, and 6.8 awaits an
 unassisted real-person stopwatch. Phase 7 is underway; the next buildable task
-is 7.3.
+is 7.4.
 
 ### 6.7 Production deploy — **[~] blocked-on-human**
 - Complete in repo: fail-fast production env validation; standalone web,
@@ -71,9 +71,12 @@ error states and must work on mobile; never show a raw enum alone
   reuses the same compact dashboard component for recent jobs. Coverage creates
   jobs through `/v1`, changes a status in Prisma, and proves a later poll sees
   the update.
-- **7.3 Job detail** — input shown, output rendered (image as image, text as
-  text), artifact downloads, plain-language error + Retry (re-submit same input
-  as a new job), re-run. Cover succeeded and failed for both modalities.
+- **7.3 Job detail — done.** `/jobs/:id` uses session-authenticated
+  `GET /v1/jobs/:id` and artifact download routes. It shows original input,
+  rendered text/image output, artifact downloads, run metadata, plain-language
+  errors, and Retry/Re-run actions that create a new job with the same model
+  and input. Coverage seeds succeeded and failed text/image jobs and proves
+  the page, public detail response, image download, and rerun path.
 - **7.4 Snippet generator** — after any UI run, show working **curl + Node**
   reproducing that exact job, API key insertable in one click. NOTE the
   hashed-key tension: the auto-provisioned key's plaintext isn't stored; plan to
