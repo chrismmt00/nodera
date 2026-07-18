@@ -84,7 +84,7 @@ One task = one AI session = one commit. Do them in order. Check the box only whe
 - [x] **7.2 Jobs dashboard.** Live statuses (human-readable), newest first. ✓ when: status changes appear without manual refresh.
 - [x] **7.3 Job detail.** Input, rendered output (image as image, text as text), artifact downloads, plain-language error + Retry, re-run. ✓ when: covers succeeded and failed jobs for both modalities.
 - [x] **7.4 Snippet generator.** Any UI run → working curl + Node snippets reproducing it. ✓ when: pasted snippet runs successfully against production.
-- [ ] **7.5 Usage page.** Jobs, tokens, images, compute time from metering. ✓ when: numbers reconcile with run rows.
+- [x] **7.5 Usage page.** Jobs, tokens, images, compute time from metering. ✓ when: numbers reconcile with run rows.
 - [ ] **7.6 UX pass.** Loading/empty/error states on every page; mobile layout; no raw enum ever shown alone. ✓ when: checklist audited page by page.
 
 **GATE 7:** a non-developer signs up, runs both models, downloads results, copies a snippet — never opening the docs.

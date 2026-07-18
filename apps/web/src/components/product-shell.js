@@ -9,11 +9,14 @@ export function ProductShell({ children, email, onSignOut, showNavigation = fals
   const links = [
     { href: "/models", label: "Models" },
     { href: "/jobs", label: "Jobs" },
+    { href: "/usage", label: "Usage" },
     { href: "/playground", label: "Playground" },
     { href: "/account", label: "Account" },
     { href: "/docs", label: "Docs" },
   ];
-  const visibleLinks = email ? links : links.filter((link) => link.href !== "/account");
+  const visibleLinks = email
+    ? links
+    : links.filter((link) => link.href !== "/account" && link.href !== "/usage");
   return (
     <div className="nodera-shell">
       <header className="nodera-topbar">

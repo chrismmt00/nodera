@@ -18,7 +18,7 @@ plan, the gotchas, and where the code goes.
 All buildable Phase 6 work is implemented. Live SDXL remains grouped with the
 Phase 6.1 hardware block; 6.7 awaits external infrastructure, and 6.8 awaits an
 unassisted real-person stopwatch. Phase 7 is underway; the next buildable task
-is 7.5.
+is 7.6.
 
 ### 6.7 Production deploy — **[~] blocked-on-human**
 - Complete in repo: fail-fast production env validation; standalone web,
@@ -83,8 +83,12 @@ error states and must work on mobile; never show a raw enum alone
   base URL, support local base URL for dev, and can create a reveal-once
   session key that is inserted into the snippet without persisting plaintext.
   Coverage executes both generated curl and Node snippets against the local API.
-- **7.5 Usage page** — jobs, tokens, images, compute time from metering
-  (`run.usage`); numbers reconcile with run rows.
+- **7.5 Usage page — done.** `/usage` shows current-month metered successful
+  jobs, input/output tokens, images, compute time, usage by model, and recent
+  metered jobs. The session-only aggregate route uses Prisma over `run.usage`
+  for the signed-in workspace without extending `/v1`. Coverage seeds
+  current-month, previous-month, failed, queued, and foreign workspace rows and
+  proves the totals reconcile with current-month succeeded run rows.
 - **7.6 UX pass** — loading/empty/error on every page; mobile; no raw enum.
 
 **GATE 7:** a non-developer signs up, runs both models, downloads results,

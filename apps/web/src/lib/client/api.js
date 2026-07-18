@@ -47,6 +47,7 @@ async function authCall(path, options = {}) {
 
 export const account = {
   keys: () => authCall("/api/account/keys"),
+  usage: () => authCall("/api/account/usage"),
   createKey: (label) =>
     authCall("/api/account/keys", {
       method: "POST",

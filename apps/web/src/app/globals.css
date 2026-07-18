@@ -402,10 +402,47 @@ select {
   display: grid;
   gap: 16px;
 }
+.nodera-usage-dashboard {
+  display: grid;
+  gap: 16px;
+}
 .nodera-job-summary-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
+}
+.nodera-usage-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+.nodera-usage-model-list,
+.nodera-usage-job-list {
+  display: grid;
+}
+.nodera-usage-model-row,
+.nodera-usage-job-row {
+  display: grid;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.nodera-usage-model-row:first-child,
+.nodera-usage-job-row:first-child {
+  border-top: 0;
+}
+.nodera-usage-model-row {
+  grid-template-columns: minmax(220px, 1.2fr) repeat(3, minmax(100px, 0.6fr));
+}
+.nodera-usage-job-row {
+  grid-template-columns: minmax(220px, 1.2fr) repeat(3, minmax(92px, 0.5fr)) minmax(150px, auto);
+  color: inherit;
+  text-decoration: none;
+}
+.nodera-usage-job-row:hover {
+  background: rgba(93, 230, 255, 0.04);
+  color: inherit;
 }
 .nodera-jobs-refresh-state {
   display: flex;
@@ -916,6 +953,9 @@ select {
   .nodera-job-row,
   .nodera-job-row.is-dashboard,
   .nodera-job-summary-grid,
+  .nodera-usage-summary-grid,
+  .nodera-usage-model-row,
+  .nodera-usage-job-row,
   .nodera-job-detail-grid,
   .nodera-artifact-row,
   .nodera-snippet-controls {
@@ -929,6 +969,9 @@ select {
     justify-content: flex-start;
   }
   .nodera-job-row > div:last-child {
+    text-align: left !important;
+  }
+  .nodera-usage-job-row > div:last-child {
     text-align: left !important;
   }
   .nodera-docs-header {
