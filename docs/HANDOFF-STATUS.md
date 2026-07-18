@@ -12,7 +12,7 @@ checkbox list is `docs/TASKS.md`; this doc adds the context, gotchas, and
 ## TL;DR
 
 - **Phases 0–5 are complete and their gates pass.** Phase 7 is in progress.
-- **84 integration tests pass** (`npm test`), plus `npm run smoke` (real
+- **85 integration tests pass** (`npm test`), plus `npm run smoke` (real
   end-to-end AI), `npm run test:multi` (multi-provider drain).
 - The system runs a **real** job end to end: customer API → dispatcher →
   provider agent → hardened Docker worker → local Ollama (`llama3.1:8b` on GPU)
@@ -46,6 +46,9 @@ checkbox list is `docs/TASKS.md`; this doc adds the context, gotchas, and
 - **Phase 7.3 (job detail) is implemented and verified:** `/jobs/:id` shows
   original input, rendered text/image output, downloads, run metadata, plain
   errors, Retry, and Re-run through the public `/v1` API.
+- **Phase 7.4 (snippet generator) is implemented and verified:** UI run results
+  and job details show exact curl/Node.js snippets with env-var keys by default
+  and reveal-once key insertion on demand.
 - Several tasks are **`[~]` blocked on human-only resources** (R2 creds,
   Google OAuth creds, a ≥12 GB GPU, a VPS/domain, live stopwatch tests). Each
   has exact instructions in `docs/LAUNCH-CHECKLIST.md`.
@@ -73,6 +76,7 @@ checkbox list is `docs/TASKS.md`; this doc adds the context, gotchas, and
 | 7.1 Model gallery | ✅ | `/models` cards + shared generated composer from `GET /v1/models`; DB-added model integration test |
 | 7.2 Jobs dashboard | ✅ | `/jobs` newest-first polling list, human statuses, responsive summary, account recent-jobs reuse |
 | 7.3 Job detail | complete | `/jobs/:id` detail, original input, text/image rendering, downloads, Retry/Re-run |
+| 7.4 Snippet generator | complete | exact curl/Node snippets from UI jobs, env-var default, reveal-once key insertion |
 
 \* Gate 4 passed with a documented exception: everything is proven on the
 local storage backend; live R2 verification needs credentials (DECISIONS 026).
@@ -135,7 +139,7 @@ local storage backend; live R2 verification needs credentials (DECISIONS 026).
   `Content-Length` is absent. Oversized bodies never create queue rows.
 - `tests/rate-limits.test.js` concurrently hammers API-key and session callers,
   proves exact accepted counts and credential isolation, and confirms every
-  accepted row remains a valid queued job. All 84 integration tests pass.
+  accepted row remains a valid queued job. All 85 integration tests pass.
 
 ---
 
@@ -261,6 +265,24 @@ local storage backend; live R2 verification needs credentials (DECISIONS 026).
 
 ---
 
+## Phase 7.4 verification
+
+- `SnippetPanel` is reusable and appears after live `JobComposer` results and on
+  `/jobs/:id`, so current and past UI runs can become API calls.
+- `job-snippets.js` emits the exact `{ model, input }` body as curl arguments,
+  a copyable curl command, and a dependency-free Node.js script. Node snippets
+  print JSON so terminals and tests can consume the created job response.
+- Snippets default to the production base URL and `NODERA_API_KEY`; local base
+  URL is available for dev. The "Insert key" action creates a new reveal-once
+  session account key and inserts it into the snippet without storing plaintext.
+- `tests/snippet-generator.test.js` signs in, creates a reveal-once key, creates
+  an image job through `/v1`, then executes both generated curl and Node snippets
+  against the local API and confirms the new jobs keep the exact model/input.
+- Browser checks on desktop and 390px mobile verified the snippet panel, curl
+  and Node tabs, one-click key insertion, and no horizontal overflow.
+
+---
+
 ## How to run & verify (Windows dev box)
 
 ```bash
@@ -269,7 +291,7 @@ docker compose up -d              # Postgres on localhost:5433
 npx prisma migrate dev            # apply migrations
 npm run seed                      # dev workspace + API key (printed once) + models
 docker build -t nodera/llm-worker workers/llm-worker
-npm test                          # 84 tests (boots the app itself; needs Docker)
+npm test                          # 85 tests (boots the app itself; needs Docker)
 npm run --silent onboarding:report # signup→first-success metrics (JSON)
 npm run smoke                     # real end-to-end (needs Ollama + llama3.1:8b)
 npm run dev:all                   # web(:3000) + dispatcher(:3001) + one agent

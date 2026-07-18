@@ -18,7 +18,7 @@ plan, the gotchas, and where the code goes.
 All buildable Phase 6 work is implemented. Live SDXL remains grouped with the
 Phase 6.1 hardware block; 6.7 awaits external infrastructure, and 6.8 awaits an
 unassisted real-person stopwatch. Phase 7 is underway; the next buildable task
-is 7.4.
+is 7.5.
 
 ### 6.7 Production deploy — **[~] blocked-on-human**
 - Complete in repo: fail-fast production env validation; standalone web,
@@ -77,11 +77,12 @@ error states and must work on mobile; never show a raw enum alone
   errors, and Retry/Re-run actions that create a new job with the same model
   and input. Coverage seeds succeeded and failed text/image jobs and proves
   the page, public detail response, image download, and rerun path.
-- **7.4 Snippet generator** — after any UI run, show working **curl + Node**
-  reproducing that exact job, API key insertable in one click. NOTE the
-  hashed-key tension: the auto-provisioned key's plaintext isn't stored; plan to
-  let the user reveal/create a key (ties to 6.4) or reference an env var in the
-  snippet. Acceptance: pasted snippet runs against production.
+- **7.4 Snippet generator — done.** Live run results and `/jobs/:id` show a
+  reusable snippet panel with curl and Node.js code that recreates the exact
+  `{ model, input }` payload. Snippets default to `NODERA_API_KEY` and production
+  base URL, support local base URL for dev, and can create a reveal-once
+  session key that is inserted into the snippet without persisting plaintext.
+  Coverage executes both generated curl and Node snippets against the local API.
 - **7.5 Usage page** — jobs, tokens, images, compute time from metering
   (`run.usage`); numbers reconcile with run rows.
 - **7.6 UX pass** — loading/empty/error on every page; mobile; no raw enum.

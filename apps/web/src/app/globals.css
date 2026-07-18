@@ -254,6 +254,9 @@ select {
   border: 1px solid #1e2431;
   border-radius: 10px;
 }
+.nodera-runner-snippet {
+  margin-top: 14px;
+}
 .nodera-models-layout {
   display: grid;
   grid-template-columns: minmax(300px, 0.85fr) minmax(0, 1.15fr);
@@ -549,6 +552,37 @@ select {
   height: 1px;
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
+}
+.nodera-snippet-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nodera-snippet-controls {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: end;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #1e2431;
+}
+.nodera-snippet-controls > div > span {
+  display: block;
+  margin-bottom: 6px;
+  color: #8b93a7;
+  font-size: 10px;
+}
+.nodera-snippet-code {
+  margin: 0;
+  max-height: 420px;
+  overflow: auto;
+  padding: 15px 18px;
+  background: #090b10;
+  color: #d7deeb;
+  font-family: var(--font-ibm-plex-mono), monospace;
+  font-size: 11px;
+  line-height: 1.65;
+  white-space: pre;
 }
 .nodera-docs-header {
   display: grid;
@@ -853,7 +887,8 @@ select {
   .nodera-page-heading,
   .nodera-form-actions,
   .nodera-result-header,
-  .nodera-detail-actions {
+  .nodera-detail-actions,
+  .nodera-snippet-actions {
     align-items: stretch;
     flex-direction: column;
   }
@@ -882,7 +917,8 @@ select {
   .nodera-job-row.is-dashboard,
   .nodera-job-summary-grid,
   .nodera-job-detail-grid,
-  .nodera-artifact-row {
+  .nodera-artifact-row,
+  .nodera-snippet-controls {
     grid-template-columns: 1fr;
   }
   .nodera-jobs-refresh-state {

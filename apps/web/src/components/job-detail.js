@@ -13,6 +13,7 @@ import {
   plainError,
   retryLabel,
 } from "@/lib/client/job-detail-view.js";
+import { SnippetPanel } from "@/components/snippet-panel.js";
 import { Button, C, El, Panel, StatusDot, humanStatus } from "@/components/ui.js";
 
 const POLL_INTERVAL_MS = 2000;
@@ -103,6 +104,7 @@ export function JobDetail({ initialJob }) {
         <section className="nodera-detail-main">
           <ResultPanel job={job} />
           <InputPanel input={job.input} />
+          <SnippetPanel job={job} />
         </section>
         <aside className="nodera-detail-side">
           <JobMeta job={job} />

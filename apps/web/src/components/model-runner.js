@@ -9,6 +9,7 @@ import {
   modelFields,
   validateModelValues,
 } from "@/lib/client/model-form.js";
+import { SnippetPanel } from "@/components/snippet-panel.js";
 import { Button, C, El, Panel, StatusDot, css, humanStatus } from "@/components/ui.js";
 
 const TERMINAL = new Set(["succeeded", "failed", "canceled"]);
@@ -152,7 +153,14 @@ export function JobComposer({ model }) {
       </Panel>
 
       {phase !== "idle" && phase !== "error" ? <Pipeline phase={phase} status={job?.status} /> : null}
-      {job && TERMINAL.has(job.status) ? <Result job={job} /> : null}
+      {job && TERMINAL.has(job.status) ? (
+        <>
+          <Result job={job} />
+          <div className="nodera-runner-snippet">
+            <SnippetPanel job={job} />
+          </div>
+        </>
+      ) : null}
     </form>
   );
 }

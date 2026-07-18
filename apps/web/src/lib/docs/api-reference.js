@@ -1,7 +1,4 @@
-export const API_BASES = {
-  local: "http://localhost:3000/api/v1",
-  production: "https://api.nodera.example/v1",
-};
+export { API_BASES } from "../client/api-bases.js";
 
 export const QUICKSTART_BODY = {
   model: "llama-3.1-8b",
@@ -62,6 +59,7 @@ export const CUSTOMER_ENDPOINTS = [
       job_id: "job_abc123",
       status: "succeeded",
       model: "llama-3.1-8b",
+      input: QUICKSTART_BODY.input,
       created_at: "2026-07-10T15:00:00Z",
       finalized_at: "2026-07-10T15:00:42Z",
       attempts: 1,
